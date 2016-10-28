@@ -4,8 +4,8 @@ import random
 from collections import defaultdict
 
 # constants, can be changed for testing
-NUM_SONGS = 10000
-NUM_ITERS = 10
+NUM_SONGS = 100
+NUM_ITERS = 10 		# NOTE: after 10 iterations error doesn't change appreciably. +saves time if low
 
 # hardcode the genre vector
 genre_labels = ['Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk']
@@ -48,26 +48,26 @@ def stochastic_grad_descent(training_set, genres, numIters, eta):
 	def loss(xx, yy, weights):
 		# the hinge loss in 0-1 prediction of xx as yy
 		out = 0
-		for i,weight in enumerate(weights):
+		for i, weight in enumerate(weights):
 		     # return 1 if it is the genre corresponding to this weight, else return -1
-		     if yy == genre_labels[i]:
+		     if yy[0] == genre_labels[i]:
 		             y = 1
 		     else:
 		             y = -1
 		     # find hinge loss for each genre vector
-		     out += max(0, 1 - y*dotProduct(xx, weight))
+		     out += (max(0, 1 - y*dotProduct(xx, weight)))**2
 		return out
          		
 	def increment_weight(xx, yy, weights):
-	     # use the increment() function to make things convenient
-	     for i,weight in enumerate(weights):
-	             # return 1 if it is the genre corresponding to this weight, else return -1
-	             if yy == genre_labels[i]:
-	                     y = 1
-	             else:
-	                     y = -1
-	     if y*dotProduct(weight, xx) < 1:
-	         increment(weight, eta*y, xx)
+		# use the increment() function to make things convenient
+		for i, weight in enumerate(weights):
+			# return 1 if it is the genre corresponding to this weight, else return -1
+			if yy[0] == genre_labels[i]:
+				y = 1
+			else:
+				y = -1
+			if y*dotProduct(weight, xx) < 1:
+				increment(weight, eta*y, xx)
 	for i in range(numIters):
 		# calculate loss function with current vector 'weights'
 		lossFunc = 0
@@ -140,18 +140,17 @@ weights = stochastic_grad_descent(training_songs, genre, NUM_ITERS, 0.01)
 print "training complete."
 
 # will test the training loss on the test set
-error = 0
-count = 0
+correct = 0
 keyerror = 0
 for song in training_songs:
-	count += 1
 	try:
-		if (predict_genre(weights, song[2]) != genre[song[0]][0]):
-			error += 1
+		if (predict_genre(weights, song[2]) == genre[song[0]][0]):
+			correct += 1
 	except KeyError:
 		keyerror += 1
-
-print "training error:", 100*float(error)/(count - keyerror), "%"
+# print accuracy, disregarding the cases where there was a keyerror
+print "training correctly identified:", 100*float(correct)/(len(training_songs) - keyerror), "%"
+print correct, keyerror, len(training_songs)
 
 # Now we sample the next 50,000 songs in the original file and check the loss on them
 print "reading 200,000 songs for training...",
@@ -172,15 +171,14 @@ for i in range(NUM_SONGS + 18, 2*NUM_SONGS + 18):
 print "done! Now will test..."
 
 # testing the model
-error = 0
-count = 0
+correct = 0
 keyerror = 0
 for song in testing_songs:
-	count += 1
 	try:
-		if (predict_genre(weights, song[2]) != genre[song[0]][0]):
-			error += 1
+		if (predict_genre(weights, song[2]) == genre[song[0]][0]):
+			correct += 1
 	except KeyError:
 		keyerror += 1
-
-print "testing error:", 100*float(error)/(count - keyerror), "%"
+# print accuracy, disregarding the cases where there was a keyerror
+print "testing correctly identified:", 100*float(correct)/(len(testing_songs) - keyerror), "%"
+print correct, keyerror, len(testing_songs)
