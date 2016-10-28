@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 
 # constants, can be changed for testing
-NUM_SONGS = 100000
+# NUM_SONGS = 100000
 NUM_ITERS = 10 		# NOTE: after 10 iterations error doesn't change appreciably. +saves time if low
 
 # hardcode the genre vector
@@ -107,7 +107,7 @@ words = words.split(',')
 # read songs into sparse vector
 print "reading songs for training...",
 training_songs = []	# list of songs, each represented by a defaultdict
-for i in range(18, NUM_SONGS + 18):
+for i in range(18, 210537):
 	d = defaultdict(int)
 	ligne = f_train.readline()
 	ligne = ligne.split(',')
@@ -120,6 +120,7 @@ for i in range(18, NUM_SONGS + 18):
 		d[words[w_no-1]] = w_count	# word index starts from 1!
 	# append the (track_id, mxm_id, defaultdict) to the list of songs
 	training_songs.append((track_id, mxm_id, d))
+f_train.close()
 print "done!"
 
 print "reading genre classifications ...",
@@ -153,10 +154,16 @@ print "training correctly identified:", 100*float(correct)/(len(training_songs) 
 
 # Now we sample the next songs in the original file and check the loss on them
 print "reading songs for training...",
+f_test = open('mxm_dataset_test.txt', 'r')
+
+for _ in range(18):
+	# vaska first 18 header lines
+	f_test.readline()
+
 testing_songs = []	# list of songs, each represented by a defaultdict
-for i in range(NUM_SONGS + 18, 2*NUM_SONGS + 18):
+for i in range(18, 27161):
 	d = defaultdict(int)
-	ligne = f_train.readline()
+	ligne = f_test.readline()
 	ligne = ligne.split(',')
 	track_id = ligne[0]
 	mxm_id = ligne[1]
@@ -167,6 +174,7 @@ for i in range(NUM_SONGS + 18, 2*NUM_SONGS + 18):
 		d[words[w_no-1]] = w_count	# word index starts from 1!
 	# append the (track_id, mxm_id, defaultdict) to the list of songs
 	testing_songs.append((track_id, mxm_id, d))
+f_test.close()
 print "done! Now will test..."
 
 # testing the model

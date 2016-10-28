@@ -5,3 +5,6 @@ Author: Dhruv Joshi
 The purpose of this course mini-project is to build an NLP system for the classification of songs based only on their lyrical content. Will make use of the Million Song dataset and lyrics provided with it (and genre classifications).
 
 Commits will be pushed to this repo throughout November and December 2016. Thereafter, this may evolve into an audio-based music recommendation system in tandem.
+
+# Data
+The lyrics training and testing datasets are obtained from [the musicmatch website](http://labrosa.ee.columbia.edu/millionsong/musixmatch), genre classification datasets  for the same are obtained from [tagtraum](http://www.tagtraum.com/msd_genre_datasets.html) (CD2 was used here).
