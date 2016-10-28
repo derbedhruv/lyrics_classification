@@ -55,7 +55,7 @@ def stochastic_grad_descent(training_set, genres, numIters, eta):
 		     else:
 		             y = -1
 		     # find hinge loss for each genre vector
-		     out += (max(0, 1 - y*dotProduct(xx, weight)))**2
+		     out += max(0, 1 - y*dotProduct(xx, weight))
 		return out
          		
 	def increment_weight(xx, yy, weights):
