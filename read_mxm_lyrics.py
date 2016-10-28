@@ -15,6 +15,18 @@ def increment(d1, scale, d2):
     for f, v in d2.items():
         d1[f] = d1.get(f, 0) + v * scale
 
+def dotProduct(d1, d2):
+    """
+    @param dict d1: a feature vector represented by a mapping from a feature (string) to a weight (float).
+    @param dict d2: same as d1
+    @return float: the dot product between d1 and d2
+    Acknowledgements: Extremely useful function taken from CS 221 hw2]
+    """
+    if len(d1) < len(d2):
+        return dotProduct(d2, d1)
+    else:
+        return sum(d1.get(f, 0) * v for f, v in d2.items())
+
 def stochastic_grad_descent(training_set, genres, numIters, eta):
     '''
     Given training_set, which is a list of (track_id, mxm_id, vector) tuples. 
@@ -28,7 +40,7 @@ def stochastic_grad_descent(training_set, genres, numIters, eta):
     random.seed(88)
 
     def loss(xx, yy, w):
-    	# the loss in 0-1 prediction of xx as yy
+    	# the hinge loss in 0-1 prediction of xx as yy
         return max(0, 1 - yy*dotProduct(xx, w))
 
     def increment_weight(xx, yy, w):
@@ -40,10 +52,14 @@ def stochastic_grad_descent(training_set, genres, numIters, eta):
         # calculate loss function with current vector 'weights'
         lossFunc = 0
         for song in training_set:
-            lossFunc += loss(song[2], genres[song[0]], weights)/D
-            # choose random vector element and update the gradient for that
-            random_song = random.sample(training_set, 1)[0]
-            increment_weight(random_song[2], genres[song[0]], weights)
+        	try:
+	            lossFunc += loss(song[2], genres[song[0]], weights)/D
+	            # choose random vector element and update the gradient for that
+	            random_song = random.sample(training_set, 1)[0]
+	            increment_weight(random_song[2], genres[random_song[0]], weights)
+	        except KeyError:
+	        	# skip that example
+	        	pass
     return weights
 
 ''' ------------------------------------------------------------------------------------------------ '''
@@ -51,6 +67,7 @@ def stochastic_grad_descent(training_set, genres, numIters, eta):
 f = open('mxm_dataset_train.txt', 'r')
 
 for _ in range(17):
+	# vaska first 17 header lines
 	f.readline()
 words = f.readline()
 words = words.split(',')
@@ -76,6 +93,7 @@ print "done!"
 
 print "reading genre classifications ...",
 # read in all genre classifications into a dict 
+# 15 genres are 'Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk'
 genre = {}
 f = open('msd_tagtraum_cd2.cls', 'r')
 for _ in range(7,280838):	# skip header of 7 lines, go till end of 280838 lines
