@@ -3,6 +3,10 @@
 import random
 from collections import defaultdict
 
+# constants, can be changed for testing
+NUM_SONGS = 10000
+NUM_ITERS = 10
+
 # hardcode the genre vector
 genre_labels = ['Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk']
 
@@ -30,6 +34,55 @@ def dotProduct(d1, d2):
     else:
         return sum(d1.get(f, 0) * v for f, v in d2.items())
 
+def stochastic_grad_descent(training_set, genres, numIters, eta):
+	'''
+	Given training_set, which is a list of (track_id, mxm_id, vector) tuples. 
+	The 'vector' is a sparse vector containing number of times a word occurs
+	in a song's lyrics.
+	This function will return the weight vector (sparse
+	feature vector) learned using stochastic gradient descent.
+	'''
+	weights = [{} for _ in range(len(genre_labels))]
+	D = len(training_songs)
+	random.seed(88)
+	def loss(xx, yy, weights):
+		# the hinge loss in 0-1 prediction of xx as yy
+		out = 0
+		for i,weight in enumerate(weights):
+		     # return 1 if it is the genre corresponding to this weight, else return -1
+		     if yy == genre_labels[i]:
+		             y = 1
+		     else:
+		             y = -1
+		     # find hinge loss for each genre vector
+		     out += max(0, 1 - y*dotProduct(xx, weight))
+		return out
+         		
+	def increment_weight(xx, yy, weights):
+	     # use the increment() function to make things convenient
+	     for i,weight in enumerate(weights):
+	             # return 1 if it is the genre corresponding to this weight, else return -1
+	             if yy == genre_labels[i]:
+	                     y = 1
+	             else:
+	                     y = -1
+	     if y*dotProduct(weight, xx) < 1:
+	         increment(weight, eta*y, xx)
+	for i in range(numIters):
+		# calculate loss function with current vector 'weights'
+		lossFunc = 0
+		for song in training_set:
+		 try:
+		     lossFunc += loss(song[2], genres[song[0]], weights)/D
+		     # choose random vector element and update the gradient for that
+		     random_song = random.sample(training_set, 1)[0]
+		     increment_weight(random_song[2], genres[random_song[0]], weights)
+		 except KeyError:
+		         # skip that example
+		         pass
+		print "i = ",i,", loss = ", lossFunc
+	return weights
+
 def predict_genre(weights, x):
 	"""
 	@param list weights: A list of dict objects with the weights for each genre
@@ -54,7 +107,7 @@ words = words.split(',')
 # read first 50000 songs into sparse vector
 print "reading 50,000 songs for training...",
 training_songs = []	# list of songs, each represented by a defaultdict
-for i in range(18,200018):
+for i in range(18, NUM_SONGS + 18):
 	d = defaultdict(int)
 	ligne = f_train.readline()
 	ligne = ligne.split(',')
@@ -83,7 +136,7 @@ print "done!"
 
 # Next we use stochastic gradient descent to train a classifier
 print "training..."
-weights = stochastic_grad_descent(training_songs, genre, 10, 0.01)
+weights = stochastic_grad_descent(training_songs, genre, NUM_ITERS, 0.01)
 print "training complete."
 
 # will test the training loss on the test set
@@ -98,6 +151,36 @@ for song in training_songs:
 	except KeyError:
 		keyerror += 1
 
-print "error:", 100*float(error)/count, "%"
+print "training error:", 100*float(error)/(count - keyerror), "%"
 
 # Now we sample the next 50,000 songs in the original file and check the loss on them
+print "reading 200,000 songs for training...",
+testing_songs = []	# list of songs, each represented by a defaultdict
+for i in range(NUM_SONGS + 18, 2*NUM_SONGS + 18):
+	d = defaultdict(int)
+	ligne = f_train.readline()
+	ligne = ligne.split(',')
+	track_id = ligne[0]
+	mxm_id = ligne[1]
+	for j in range(2,len(ligne)):
+		# put rest of the line into the defaultdict
+		wordclass = ligne[j]
+		w_no, w_count = map(int, wordclass.split(':'))
+		d[words[w_no-1]] = w_count	# word index starts from 1!
+	# append the (track_id, mxm_id, defaultdict) to the list of songs
+	testing_songs.append((track_id, mxm_id, d))
+print "done! Now will test..."
+
+# testing the model
+error = 0
+count = 0
+keyerror = 0
+for song in testing_songs:
+	count += 1
+	try:
+		if (predict_genre(weights, song[2]) != genre[song[0]][0]):
+			error += 1
+	except KeyError:
+		keyerror += 1
+
+print "testing error:", 100*float(error)/(count - keyerror), "%"
