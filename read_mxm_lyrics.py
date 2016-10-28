@@ -104,8 +104,8 @@ for _ in range(17):
 words = f_train.readline()
 words = words.split(',')
 
-# read first 50000 songs into sparse vector
-print "reading 50,000 songs for training...",
+# read songs into sparse vector
+print "reading songs for training...",
 training_songs = []	# list of songs, each represented by a defaultdict
 for i in range(18, NUM_SONGS + 18):
 	d = defaultdict(int)
@@ -151,8 +151,8 @@ for song in training_songs:
 # print accuracy, disregarding the cases where there was a keyerror
 print "training correctly identified:", 100*float(correct)/(len(training_songs) - keyerror), "%"
 
-# Now we sample the next 50,000 songs in the original file and check the loss on them
-print "reading 200,000 songs for training...",
+# Now we sample the next songs in the original file and check the loss on them
+print "reading songs for training...",
 testing_songs = []	# list of songs, each represented by a defaultdict
 for i in range(NUM_SONGS + 18, 2*NUM_SONGS + 18):
 	d = defaultdict(int)
