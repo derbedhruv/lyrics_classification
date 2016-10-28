@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 
 # constants, can be changed for testing
-NUM_SONGS = 100
+NUM_SONGS = 100000
 NUM_ITERS = 10 		# NOTE: after 10 iterations error doesn't change appreciably. +saves time if low
 
 # hardcode the genre vector
@@ -80,7 +80,7 @@ def stochastic_grad_descent(training_set, genres, numIters, eta):
 		 except KeyError:
 		         # skip that example
 		         pass
-		print "i = ",i,", loss = ", lossFunc
+		# print "i = ",i,", loss = ", lossFunc
 	return weights
 
 def predict_genre(weights, x):
@@ -150,7 +150,6 @@ for song in training_songs:
 		keyerror += 1
 # print accuracy, disregarding the cases where there was a keyerror
 print "training correctly identified:", 100*float(correct)/(len(training_songs) - keyerror), "%"
-print correct, keyerror, len(training_songs)
 
 # Now we sample the next 50,000 songs in the original file and check the loss on them
 print "reading 200,000 songs for training...",
@@ -181,4 +180,3 @@ for song in testing_songs:
 		keyerror += 1
 # print accuracy, disregarding the cases where there was a keyerror
 print "testing correctly identified:", 100*float(correct)/(len(testing_songs) - keyerror), "%"
-print correct, keyerror, len(testing_songs)
