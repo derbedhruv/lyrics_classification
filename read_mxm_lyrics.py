@@ -3,7 +3,10 @@
 import random
 from collections import defaultdict
 
-''' FUNCTION DEFINITIONS '''
+# hardcode the genre vector
+genre_labels = ['Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk']
+
+''' ---------------------------------------------- FUNCTION DEFINITIONS ---------------------------------------------- '''
 def increment(d1, scale, d2):
     """
     Implements d1 += scale * d2 for sparse vectors.
@@ -35,18 +38,33 @@ def stochastic_grad_descent(training_set, genres, numIters, eta):
     This function will return the weight vector (sparse
     feature vector) learned using stochastic gradient descent.
     '''
-    weights = {}  # feature => weight
+    weights = [{} for _ in range(len(genre_labels))]
     D = len(training_songs)
     random.seed(88)
 
-    def loss(xx, yy, w):
+    def loss(xx, yy, weights):
     	# the hinge loss in 0-1 prediction of xx as yy
-        return max(0, 1 - yy*dotProduct(xx, w))
+    	out = 0
+    	for i,weight in enumerate(weights):
+    		# return 1 if it is the genre corresponding to this weight, else return -1
+    		if yy == genre_labels[i]:
+    			y = 1
+    		else:
+    			y = -1
+    		# find hinge loss for each genre vector
+    		out += max(0, 1 - y*dotProduct(xx, weight))
+        return out
 
-    def increment_weight(xx, yy, w):
+    def increment_weight(xx, yy, weights):
     	# use the increment() function to make things convenient
-        if yy*dotProduct(w, xx) < 1:
-            increment(w, eta*yy, xx)
+    	for i,weight in enumerate(weights):
+    		# return 1 if it is the genre corresponding to this weight, else return -1
+    		if yy == genre_labels[i]:
+    			y = 1
+    		else:
+    			y = -1
+	        if y*dotProduct(weight, xx) < 1:
+	            increment(weight, eta*y, xx)
 
     for i in range(numIters):
         # calculate loss function with current vector 'weights'
@@ -60,6 +78,7 @@ def stochastic_grad_descent(training_set, genres, numIters, eta):
 	        except KeyError:
 	        	# skip that example
 	        	pass
+        print "i = ",i,", loss = ", lossFunc
     return weights
 
 ''' ------------------------------------------------------------------------------------------------ '''
@@ -104,4 +123,6 @@ f.close()
 print "done!"
 
 # Next we use stochastic gradient descent to train a classifier
+print "training..."
 weights = stochastic_grad_descent(training_songs, genre, 10, 0.01)
+print "done."
