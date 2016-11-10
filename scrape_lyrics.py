@@ -17,9 +17,11 @@ if response.status_code == 200:
 	# re-parse as html
 	soup = BeautifulSoup(str(z[0]), 'html.parser')
 	# remove the annoying ad <img> tags
-	soup.img.extract()
-	# will attempt to remove <br> tags
-	print soup
+	img = soup.img.extract()
+	# convert to text and split at newline
+	sentence_case_lyrics = soup.get_text().split('\n')
+	for a in sentence_case_lyrics[6:]:
+		print a
 	# print soup.prettify()
 else:
 	print "Could not find song"
