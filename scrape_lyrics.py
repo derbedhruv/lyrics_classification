@@ -3,6 +3,7 @@
 import requests
 from bs4 import BeautifulSoup
 import string
+from collections import defaultdict
 
 # de-capitalize names of artist and songs, replace spaces with hyphens
 def get_song_lyrics(artist, song):
@@ -29,6 +30,7 @@ def get_song_lyrics(artist, song):
 		print "Could not find song"
 
 # scrape the whole website slowly
+genres = defaultdict(int)
 for alph in string.lowercase:
 	artist_count = 0
 	songs_total_alph = 0
@@ -60,12 +62,39 @@ for alph in string.lowercase:
 		y = BeautifulSoup(x, "html.parser")
 		lyrix = y.findAll("td", { "class" : "td-item" })
 		for a in lyrix:
-		  a = BeautifulSoup(str(a), 'html.parser')
-	  	  art_lyr_text = a.td.string
-		  art_lyr_text = (str(art_lyr_text)).split()
-		  # print art_lyr_text[0]
-		  song_count += int(art_lyr_text[0])
-		# print 'page', i, 'of', alph, 'songs:', song_count
+			a = BeautifulSoup(str(a), 'html.parser')
+			art_lyr_text = a.td.string
+			art_lyr_text = (str(art_lyr_text)).split()
+			# print art_lyr_text[0]
+			song_count += int(art_lyr_text[0])
+			# and now we go down a further level to get the actual songs of each artist
+			# go to artist page
+			artist_pages = []
+			z = y.findAll("table", { "class" : "tracklist" })	# the table of entries of artists
+			soup = BeautifulSoup(str(z[0]), 'html.parser')
+			for at in soup.findAll('a'):	# loop through all the anchor tags in that table
+			  # print 'checking page of artist', at.text,
+			  current_artist_url = str(at['href'])		# start exploring this artist
+			  artist_pages.append(current_artist_url)
+			  # Now we go to this artists page
+			  uri = current_artist_url
+			  response = requests.get(uri)	# goto the artists page
+			  artist_page_html  = response.text
+			  artist_page_html_soup = BeautifulSoup(artist_page_html, "html.parser")
+			  # on artist page, get Genre
+			  artist_songs = artist_page_html_soup.findAll("div", { "class" : "pagetitle" })  # get the title div which has the genres
+			  # check if this div is not empty
+			  if len(artist_songs) != 0:
+			    artist_songs_soup = BeautifulSoup(str(artist_songs[0]), 'html.parser')   # soup banaao
+			    genre = str(artist_songs_soup.a.text)		# <- this is the required genre append to hash table
+			    if genres[genre] == 0:
+			      genres[genre] = 1
+			      print 'found new genre', genre
+			    else:
+			      print 
+			  else:
+			    print
+			# print 'page', i, 'of', alph, 'songs:', song_count
 		songs_total_alph += song_count
 	print alph, ':', len(artist_links), ', num_songs:',songs_total_alph
 print 'total no of artists:', artist_count
