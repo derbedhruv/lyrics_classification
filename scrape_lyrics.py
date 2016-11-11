@@ -29,8 +29,9 @@ def get_song_lyrics(artist, song):
 		print "Could not find song"
 
 # scrape the whole website slowly
-artist_count = 0
 for alph in string.lowercase:
+	artist_count = 0
+	songs_total_alph = 0
 	uri = 'http://www.songlyrics.com/'+alph
 	response = requests.get(uri)
 	x  = response.text
@@ -42,13 +43,29 @@ for alph in string.lowercase:
 	soup = BeautifulSoup(str(z[1]), 'html.parser')
 
 	artist_links = []
-	for p in y.findAll("li", { "class" : "li_pagination" })[1:-1]:
+	for p in y.findAll("li", { "class" : "li_pagination" })[0:-1]:
 	  current_link = str(p.find('a'))
 	  curr = BeautifulSoup(current_link, 'html.parser')
 	  link = curr.find('a')
 	  if not link == None:
 	    # print link['href']
 	    artist_links.append(link['href'])
-	print alph, ':', len(artist_links)
 	artist_count += len(artist_links)
+	# Now will go to each of these pages in artist links and retrieve songs
+	for i,al in enumerate(artist_links):
+		song_count = 0
+		uri = 'http://www.songlyrics.com/'+al
+		response = requests.get(uri)
+		x  = response.text
+		y = BeautifulSoup(x, "html.parser")
+		lyrix = y.findAll("td", { "class" : "td-item" })
+		for a in lyrix:
+		  a = BeautifulSoup(str(a), 'html.parser')
+	  	  art_lyr_text = a.td.string
+		  art_lyr_text = (str(art_lyr_text)).split()
+		  # print art_lyr_text[0]
+		  song_count += int(art_lyr_text[0])
+		print 'page', i, 'of', alph, 'songs:', song_count
+		songs_total_alph += song_count
+	print alph, ':', len(artist_links), ', num_songs:',songs_total_alph
 print 'total no of artists:', artist_count
