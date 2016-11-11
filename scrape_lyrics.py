@@ -92,7 +92,6 @@ for alph in string.lowercase:
 		    song_count += 1
 		    # print current_artist_url, genre
 		print 'page', i, 'of', alph, 'songs:', song_count
-		print 'overview of genres seen till now:'
 		print dict(genres)
 		songs_total_alph += song_count
 	print alph, ':', len(artist_links), ', num_songs:',songs_total_alph
