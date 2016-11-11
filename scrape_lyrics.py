@@ -42,7 +42,7 @@ for alph in string.lowercase:
 	# Now we can parse this.. need to go from  zz[1] to zz[n-2]
 	soup = BeautifulSoup(str(z[1]), 'html.parser')
 
-	artist_links = []
+	artist_links = [alph]
 	for p in y.findAll("li", { "class" : "li_pagination" })[0:-1]:
 	  current_link = str(p.find('a'))
 	  curr = BeautifulSoup(current_link, 'html.parser')
@@ -65,7 +65,7 @@ for alph in string.lowercase:
 		  art_lyr_text = (str(art_lyr_text)).split()
 		  # print art_lyr_text[0]
 		  song_count += int(art_lyr_text[0])
-		print 'page', i, 'of', alph, 'songs:', song_count
+		# print 'page', i, 'of', alph, 'songs:', song_count
 		songs_total_alph += song_count
 	print alph, ':', len(artist_links), ', num_songs:',songs_total_alph
 print 'total no of artists:', artist_count
