@@ -51,10 +51,11 @@ for alph in string.lowercase:
 		artist_pages = []
 		z = y.findAll("table", { "class" : "tracklist" })	# the table of entries of artists
 		soup = BeautifulSoup(str(z[0]), 'html.parser')
-		for at in soup.findAll('a'):	# loop through all the anchor tags in that table
+		for at in soup.findAll('tr'):	# loop through all the anchor tags in that table
 		  # print 'checking page of artist', at.text,
-		  current_artist_url = str(at['href'])		# start exploring this artist
-		  artist_name = str(at.text)
+		  current_artist_url = str(at.a['href'])		# start exploring this artist
+		  artist_name = str(at.a.text)
+		  print artist_name
 		  artist_pages.append(current_artist_url)
 		  # Now we go to this artists page
 		  try:
