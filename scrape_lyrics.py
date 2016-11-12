@@ -86,10 +86,13 @@ for alph in string.lowercase:
 		      if songs_seen <= num_songs_for_artist:
 		        # deep-dive into each link one by one and retrieve the lyrics
 		        song_url = str(song['href'])
+		        song_name = str(song.text)
 		        song_request = requests.get(song_url)
 		        song_lyrics = BeautifulSoup(song_request.text, "html.parser")
 		        img = song_lyrics.img.extract()
-		        print song_lyrics.find("p", { "id" : "songLyricsDiv" }).get_text()
+		        lyric = song_lyrics.find("p", { "id" : "songLyricsDiv" }).get_text()
+		        '''INSERTING THE LYRICS INTO THE DB'''
+		        c.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric, genre, song_url, artist_name, song_name))
 		      songs_seen += 1
 		print 'page', i, 'of', alph, 'songs:', song_count
 		print dict(genres)
