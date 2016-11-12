@@ -54,6 +54,8 @@ for alph in string.lowercase:
 		for at in soup.findAll('tr'):	# loop through all the anchor tags in that table
 		  # print 'checking page of artist', at.text,
 		  current_artist_url = str(at.a['href'])		# start exploring this artist
+		  songs_count_text = at.find("td", {"class": "td-item"}).text
+		  print songs_count_text.split()[0]
 		  artist_name = str(at.a.text)
 		  print artist_name
 		  artist_pages.append(current_artist_url)
@@ -81,7 +83,7 @@ for alph in string.lowercase:
 		    song_soup = soup = BeautifulSoup(str(artist_songs), 'html.parser')
 		    for song in song_soup.findAll('a'):
 		      # deep-dive into each link one by one and retrieve the lyrics
-		      print str(song['href'])
+		      song_url = str(song['href'])
 		print 'page', i, 'of', alph, 'songs:', song_count
 		print dict(genres)
 		songs_total_alph += song_count
