@@ -54,7 +54,7 @@ for alph in string.lowercase:
 		for at in soup.findAll('a'):	# loop through all the anchor tags in that table
 		  # print 'checking page of artist', at.text,
 		  current_artist_url = str(at['href'])		# start exploring this artist
-		  print str(at.text)
+		  artist_name = str(at.text)
 		  artist_pages.append(current_artist_url)
 		  # Now we go to this artists page
 		  try:
