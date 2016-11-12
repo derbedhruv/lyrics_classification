@@ -4,31 +4,14 @@ import requests
 from bs4 import BeautifulSoup
 import string
 from collections import defaultdict
+import MySQLdb
+
+# Now connect to the database - store credentials in ~/.my.cnf
+print 'will establish connection to db'
+db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
+db_cursor = db.cursor()
 
 # de-capitalize names of artist and songs, replace spaces with hyphens
-def get_song_lyrics(artist, song):
-	artist_hyphenated = 'aerosmith' 
-	song_name = 'remember'
-
-	uri = 'http://www.songlyrics.com/' + artist_hyphenated + '/' + song_name + '-lyrics/'
-	response = requests.get(uri)
-
-	if response.status_code == 200:
-		x  = response.text
-		y = BeautifulSoup(x, "html.parser")
-		z = y.findAll("p", { "id" : "songLyricsDiv" })
-		# re-parse as html
-		soup = BeautifulSoup(str(z[0]), 'html.parser')
-		# remove the annoying ad <img> tags
-		img = soup.img.extract()
-		# convert to text and split at newline
-		sentence_case_lyrics = soup.get_text().split('\n')
-		for a in sentence_case_lyrics[6:]:
-			print a
-		# print soup.prettify()
-	else:
-		print "Could not find song"
-
 # scrape the whole website slowly
 genres = defaultdict(int)
 for alph in string.lowercase:
@@ -82,15 +65,16 @@ for alph in string.lowercase:
 		  artist_page_html  = response.text
 		  artist_page_html_soup = BeautifulSoup(artist_page_html, "html.parser")
 		  # on artist page, get Genre
-		  artist_songs = artist_page_html_soup.findAll("div", { "class" : "pagetitle" })  # get the title div which has the genres
+		  artist_title = artist_page_html_soup.findAll("div", { "class" : "pagetitle" })  # get the title div which has the genres
 		  # check if this div is not empty
-		  if len(artist_songs) != 0:
+		  if len(artist_title) != 0:
 		    '''if this is the case, we will be skipping this set of lyrics since they are not tagged'''
-		    artist_songs_soup = BeautifulSoup(str(artist_songs[0]), 'html.parser')   # soup banaao
-		    genre = str(artist_songs_soup.a.text)		# <- this is the required genre append to hash table
+		    artist_title_soup= BeautifulSoup(str(artist_title[0]), 'html.parser')   # soup banaao
+		    genre = str(artist_title_soup.a.text)		# <- this is the required genre append to hash table
 		    genres[genre] += 1	# add to the new genre list
 		    song_count += 1
 		    # print current_artist_url, genre
+		    # Now finally, get the lyrics and put them into the DB
 		print 'page', i, 'of', alph, 'songs:', song_count
 		print dict(genres)
 		songs_total_alph += song_count
