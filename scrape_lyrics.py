@@ -92,7 +92,8 @@ for alph in string.lowercase:
 		        img = song_lyrics.img.extract()
 		        lyric = song_lyrics.find("p", { "id" : "songLyricsDiv" }).get_text()
 		        '''INSERTING THE LYRICS INTO THE DB'''
-		        c.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric, genre, song_url, artist_name, song_name))
+		        db_cursor.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric, genre, song_url, artist_name, song_name))
+		        db.commit()
 		      songs_seen += 1
 		print 'page', i, 'of', alph, 'songs:', song_count
 		print dict(genres)
