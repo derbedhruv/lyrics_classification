@@ -56,7 +56,8 @@ for alph in string.lowercase:
 		  current_artist_url = str(at.a['href'])		# start exploring this artist
 		  songs_count_text = at.find("td", {"class": "td-item"}).text
 		  num_songs_for_artist = int(songs_count_text.split()[0])
-		  artist_name = str(at.a.text)
+		  artist_name = at.a.text
+		  artist_name = artist_name.encode('utf-8')
 		  print artist_name
 		  artist_pages.append(current_artist_url)
 		  # Now we go to this artists page
@@ -76,7 +77,8 @@ for alph in string.lowercase:
 		  if len(artist_title) != 0:
 		    '''if this is the case, we will be skipping this set of lyrics since they are not tagged'''
 		    artist_title_soup = BeautifulSoup(str(artist_title[0]), 'html.parser')   # soup banaao
-		    genre = str(artist_title_soup.a.text)		# <- this is the required genre append to hash table
+		    genre = artist_title_soup.a.text		# <- this is the required genre append to hash table
+		    genre = genre.encode('utf-8')
 		    genres[genre] += 1	# add to the new genre list
 		    song_count += 1
 		    # print current_artist_url, genre
@@ -85,14 +87,18 @@ for alph in string.lowercase:
 		    for song in song_soup.findAll('a'):
 		      if songs_seen <= num_songs_for_artist:
 		        # deep-dive into each link one by one and retrieve the lyrics
-		        song_url = str(song['href'])
-		        song_name = str(song.text)
+		        song_url = song['href']
+		        song_url = song_url.encode('utf-8')
+		        song_name = song.text
+		        song_name = song_name.encode('utf-8')
 		        song_request = requests.get(song_url)
 		        song_lyrics = BeautifulSoup(song_request.text, "html.parser")
 		        img = song_lyrics.img.extract()
-		        lyric = song_lyrics.find("p", { "id" : "songLyricsDiv" }).get_text()
+		        lyrics_div = song_lyrics.find("p", { "id" : "songLyricsDiv" })
+		        if not lyrics_div == None:
+		          lyric = lyrics_div.get_text()
 		        '''INSERTING THE LYRICS INTO THE DB'''
-		        db_cursor.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric, genre, song_url, artist_name, song_name))
+		        db_cursor.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric.encode('utf-8'), genre, song_url, artist_name, song_name))
 		        db.commit()
 		      songs_seen += 1
 		print 'page', i, 'of', alph, 'songs:', song_count
