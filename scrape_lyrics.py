@@ -6,15 +6,23 @@ import string
 from collections import defaultdict
 import MySQLdb
 
+# global constants
+MIN_SONGS = 25	# minimum number of songs for artist to be considered
+MIN_LYRICS_CHARCOUNT = 50	# minimum character count for a song's lyrics to be considered
+
 # Now connect to the database - store credentials in ~/.my.cnf
 print 'will establish connection to db'
 db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
 db_cursor = db.cursor()
 
-# de-capitalize names of artist and songs, replace spaces with hyphens
 # scrape the whole website slowly
+# this will increase the efficiency and speed of artists scraped, since mysql can take HUGE transactions per second
 genres = defaultdict(int)
-for alph in string.lowercase:
+def extract_artist(alph):
+	"""
+	Scrapes songlyrics.com for artist names starting with @alph (should be single letter of english alphabet)
+	@param alph: single char, should be one of string.lowercase
+	"""
 	artist_count = 0
 	songs_total_alph = 0
 	artist_links = [alph]
@@ -58,7 +66,10 @@ for alph in string.lowercase:
 		  num_songs_for_artist = int(songs_count_text.split()[0])
 		  artist_name = at.a.text
 		  artist_name = artist_name.encode('utf-8')
-		  print artist_name
+		  if num_songs_for_artist <= MIN_SONGS:
+		    print 'skipping', artist_name, 'due to very few songs'
+		  else:
+		  	print 'exploring', artist_name
 		  artist_pages.append(current_artist_url)
 		  # Now we go to this artists page
 		  try:
@@ -97,16 +108,25 @@ for alph in string.lowercase:
 		        lyrics_div = song_lyrics.find("p", { "id" : "songLyricsDiv" })
 		        if not lyrics_div == None:
 		          lyric = lyrics_div.get_text()
-		        '''INSERTING THE LYRICS INTO THE DB'''
-		        db_cursor.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric.encode('utf-8'), genre, song_url, artist_name, song_name))
-		        db.commit()
+			  lyric = lyric.encode('utf-8')
+		          if len(lyric) >= MIN_LYRICS_CHARCOUNT:
+				  '''INSERTING THE LYRICS INTO THE DB'''
+				  db_cursor.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric, genre, song_url, artist_name, song_name))
+				  db.commit()
 		      songs_seen += 1
 		print 'page', i, 'of', alph, 'songs:', song_count
 		print dict(genres)
 		songs_total_alph += song_count
+	print 'RESULTS FOR CASE', alph
 	print alph, ':', len(artist_links), ', num_songs:',songs_total_alph
-print 'total no of artists:', artist_count
-# print no of songs for each genre
-print 'total songs per genre:'
-for g in genres:
-  print g, ':', genres[g]
+	print 'total no of artists:', artist_count
+	# print no of songs for each genre
+	print 'total songs per genre:'
+	for g in genres:
+	  print g, ':', genres[g]
+
+if __name__ == "__main__":
+	for alph in string.lowercase:
+		# TODO: spawn a new thread for each call to extract_artist
+		extract_artist(alph)
+
