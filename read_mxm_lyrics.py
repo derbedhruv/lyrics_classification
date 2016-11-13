@@ -94,53 +94,81 @@ def predict_genre(weights, x):
 	_, i = max((dotProduct(weight, x), i) for i, weight in enumerate(weights))
 	return genre_labels[i]
 
+def read_training_set_BoW():
+  """
+  Read in files from the training dataset and put them into a dict
+  """
+  f_train = open('mxm_dataset_train.txt', 'r')
+
+  for _ in range(17):
+	  # vaska first 17 header lines
+	  f_train.readline()
+  words = f_train.readline()
+  words = words.split(',')
+
+  # read songs into sparse vector
+  print "reading songs for training...",
+  training_songs = []	# list of songs, each represented by a defaultdict
+  for i in range(18, 210537):
+	  d = defaultdict(int)
+	  ligne = f_train.readline()
+	  ligne = ligne.split(',')
+	  track_id = ligne[0]
+	  mxm_id = ligne[1]
+	  for j in range(2,len(ligne)):
+		  # put rest of the line into the defaultdict
+		  wordclass = ligne[j]
+		  w_no, w_count = map(int, wordclass.split(':'))
+		  d[words[w_no-1]] = w_count	# word index starts from 1!
+	  # append the (track_id, mxm_id, defaultdict) to the list of songs
+	  training_songs.append((track_id, mxm_id, d))
+  f_train.close()
+  print "done!",
+  print "reading genre classifications ...",
+  # read in all genre classifications into a dict 
+  # 15 genres are 'Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk'
+  genre = {}
+  f = open('msd_tagtraum_cd2.cls', 'r')
+  for _ in range(7,280838):	# skip header of 7 lines, go till end of 280838 lines
+	  data = f.readline().strip()
+	  data = data.split('\t')
+	  genre[data[0]] = tuple(x for x in data[1:])		# put the data into the genre dict
+  f.close()
+  print "done!"
+
+def read_testing_set_BoW():
+  print "reading songs for training...",
+  f_test = open('mxm_dataset_test.txt', 'r')
+
+  for _ in range(18):
+	  # vaska first 18 header lines
+	  f_test.readline()
+
+  testing_songs = []	# list of songs, each represented by a defaultdict
+  for i in range(18, 27161):
+	  d = defaultdict(int)
+	  ligne = f_test.readline()
+	  ligne = ligne.split(',')
+	  track_id = ligne[0]
+	  mxm_id = ligne[1]
+	  for j in range(2,len(ligne)):
+		  # put rest of the line into the defaultdict
+		  wordclass = ligne[j]
+		  w_no, w_count = map(int, wordclass.split(':'))
+		  d[words[w_no-1]] = w_count	# word index starts from 1!
+	  # append the (track_id, mxm_id, defaultdict) to the list of songs
+	  testing_songs.append((track_id, mxm_id, d))
+  f_test.close()
+  print "done! Now will test..."
+
 ''' ------------------------------------------------------------------------------------------------ '''
-
-f_train = open('mxm_dataset_train.txt', 'r')
-
-for _ in range(17):
-	# vaska first 17 header lines
-	f_train.readline()
-words = f_train.readline()
-words = words.split(',')
-
-# read songs into sparse vector
-print "reading songs for training...",
-training_songs = []	# list of songs, each represented by a defaultdict
-for i in range(18, 210537):
-	d = defaultdict(int)
-	ligne = f_train.readline()
-	ligne = ligne.split(',')
-	track_id = ligne[0]
-	mxm_id = ligne[1]
-	for j in range(2,len(ligne)):
-		# put rest of the line into the defaultdict
-		wordclass = ligne[j]
-		w_no, w_count = map(int, wordclass.split(':'))
-		d[words[w_no-1]] = w_count	# word index starts from 1!
-	# append the (track_id, mxm_id, defaultdict) to the list of songs
-	training_songs.append((track_id, mxm_id, d))
-f_train.close()
-print "done!"
-
-print "reading genre classifications ...",
-# read in all genre classifications into a dict 
-# 15 genres are 'Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk'
-genre = {}
-f = open('msd_tagtraum_cd2.cls', 'r')
-for _ in range(7,280838):	# skip header of 7 lines, go till end of 280838 lines
-	data = f.readline().strip()
-	data = data.split('\t')
-	genre[data[0]] = tuple(x for x in data[1:])		# put the data into the genre dict
-f.close()
-print "done!"
 
 # Next we use stochastic gradient descent to train a classifier
 print "training..."
 weights = stochastic_grad_descent(training_songs, genre, NUM_ITERS, 0.01)
 print "training complete."
 
-# will test the training loss on the test set
+# training loss on the test set
 correct = 0
 keyerror = 0
 for song in training_songs:
@@ -153,29 +181,6 @@ for song in training_songs:
 print "training correctly identified:", 100*float(correct)/(len(training_songs) - keyerror), "%"
 
 # Now we sample the next songs in the original file and check the loss on them
-print "reading songs for training...",
-f_test = open('mxm_dataset_test.txt', 'r')
-
-for _ in range(18):
-	# vaska first 18 header lines
-	f_test.readline()
-
-testing_songs = []	# list of songs, each represented by a defaultdict
-for i in range(18, 27161):
-	d = defaultdict(int)
-	ligne = f_test.readline()
-	ligne = ligne.split(',')
-	track_id = ligne[0]
-	mxm_id = ligne[1]
-	for j in range(2,len(ligne)):
-		# put rest of the line into the defaultdict
-		wordclass = ligne[j]
-		w_no, w_count = map(int, wordclass.split(':'))
-		d[words[w_no-1]] = w_count	# word index starts from 1!
-	# append the (track_id, mxm_id, defaultdict) to the list of songs
-	testing_songs.append((track_id, mxm_id, d))
-f_test.close()
-print "done! Now will test..."
 
 # testing the model
 correct = 0
