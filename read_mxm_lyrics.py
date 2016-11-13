@@ -3,86 +3,10 @@
 import random
 from collections import defaultdict
 
-# constants, can be changed for testing
-# NUM_SONGS = 100000
-NUM_ITERS = 10 		# NOTE: after 10 iterations error doesn't change appreciably. +saves time if low
-
 # hardcode the genre vector
 genre_labels = ['Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk']
 
 ''' ---------------------------------------------- FUNCTION DEFINITIONS ---------------------------------------------- '''
-def increment(d1, scale, d2):
-    """
-    Implements d1 += scale * d2 for sparse vectors.
-    @param dict d1: the feature vector which is mutated.
-    @param float scale
-    @param dict d2: a feature vector.
-    [Acknowledgements: Extremely useful function taken from CS 221 hw2]
-    """
-    for f, v in d2.items():
-        d1[f] = d1.get(f, 0) + v * scale
-
-def dotProduct(d1, d2):
-    """
-    @param dict d1: a feature vector represented by a mapping from a feature (string) to a weight (float).
-    @param dict d2: same as d1
-    @return float: the dot product between d1 and d2
-    Acknowledgements: Extremely useful function taken from CS 221 hw2]
-    """
-    if len(d1) < len(d2):
-        return dotProduct(d2, d1)
-    else:
-        return sum(d1.get(f, 0) * v for f, v in d2.items())
-
-def stochastic_grad_descent(training_set, genres, numIters, eta):
-	'''
-	Given training_set, which is a list of (track_id, mxm_id, vector) tuples. 
-	The 'vector' is a sparse vector containing number of times a word occurs
-	in a song's lyrics.
-	This function will return the weight vector (sparse
-	feature vector) learned using stochastic gradient descent.
-	'''
-	weights = [{} for _ in range(len(genre_labels))]
-	D = len(training_songs)
-	random.seed(88)
-	def loss(xx, yy, weights):
-		# the hinge loss in 0-1 prediction of xx as yy
-		out = 0
-		for i, weight in enumerate(weights):
-		     # return 1 if it is the genre corresponding to this weight, else return -1
-		     if yy[0] == genre_labels[i]:
-		             y = 1
-		     else:
-		             y = -1
-		     # find hinge loss for each genre vector
-		     out += max(0, 1 - y*dotProduct(xx, weight))
-		return out
-         		
-	def increment_weight(xx, yy, weights):
-		# use the increment() function to make things convenient
-		for i, weight in enumerate(weights):
-			# return 1 if it is the genre corresponding to this weight, else return -1
-			if yy[0] == genre_labels[i]:
-				y = 1
-			else:
-				y = -1
-			if y*dotProduct(weight, xx) < 1:
-				increment(weight, eta*y, xx)
-	for i in range(numIters):
-		# calculate loss function with current vector 'weights'
-		lossFunc = 0
-		for song in training_set:
-		 try:
-		     lossFunc += loss(song[2], genres[song[0]], weights)/D
-		     # choose random vector element and update the gradient for that
-		     random_song = random.sample(training_set, 1)[0]
-		     increment_weight(random_song[2], genres[random_song[0]], weights)
-		 except KeyError:
-		         # skip that example
-		         pass
-		# print "i = ",i,", loss = ", lossFunc
-	return weights
-
 def predict_genre(weights, x):
 	"""
 	@param list weights: A list of dict objects with the weights for each genre
@@ -94,22 +18,25 @@ def predict_genre(weights, x):
 	_, i = max((dotProduct(weight, x), i) for i, weight in enumerate(weights))
 	return genre_labels[i]
 
-def read_training_set_BoW():
-  """
-  Read in files from the training dataset and put them into a dict
-  """
-  f_train = open('mxm_dataset_train.txt', 'r')
+def read_data_BoW():
+	"""
+	Read in files from the dataset and put them into a (training_set, testing_set) tuple
+	Split is about 80/20
+	Each of them is a dict of (bag_of_words, genre), where bag_of_words is a dict of words and no of occurences of the word
+	genre is a string with the genre into which the song is classified
+	"""
+	f_train = open('mxm_dataset_train.txt', 'r')
 
-  for _ in range(17):
+	for _ in range(17):
 	  # vaska first 17 header lines
 	  f_train.readline()
-  words = f_train.readline()
-  words = words.split(',')
+	words = f_train.readline()
+	words = words.split(',')
 
-  # read songs into sparse vector
-  print "reading songs for training...",
-  training_songs = []	# list of songs, each represented by a defaultdict
-  for i in range(18, 210537):
+	# read songs into sparse vector
+	print "reading songs for training...",
+	training_songs = []	# list of songs, each represented by a defaultdict
+	for i in range(18, 210537):
 	  d = defaultdict(int)
 	  ligne = f_train.readline()
 	  ligne = ligne.split(',')
@@ -122,30 +49,40 @@ def read_training_set_BoW():
 		  d[words[w_no-1]] = w_count	# word index starts from 1!
 	  # append the (track_id, mxm_id, defaultdict) to the list of songs
 	  training_songs.append((track_id, mxm_id, d))
-  f_train.close()
-  print "done!",
-  print "reading genre classifications ...",
-  # read in all genre classifications into a dict 
-  # 15 genres are 'Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk'
-  genre = {}
-  f = open('msd_tagtraum_cd2.cls', 'r')
-  for _ in range(7,280838):	# skip header of 7 lines, go till end of 280838 lines
+	f_train.close()
+	print "done!",
+	print "reading genre classifications ...",
+	# read in all genre classifications into a dict 
+	# 15 genres are 'Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk'
+	genre = {}
+	f = open('msd_tagtraum_cd2.cls', 'r')
+	for _ in range(7,280838):	# skip header of 7 lines, go till end of 280838 lines
 	  data = f.readline().strip()
 	  data = data.split('\t')
 	  genre[data[0]] = tuple(x for x in data[1:])		# put the data into the genre dict
-  f.close()
-  print "done!"
+	f.close()
+	print "done!",
 
-def read_testing_set_BoW():
-  print "reading songs for training...",
-  f_test = open('mxm_dataset_test.txt', 'r')
+	# Now combine both into a training set
+	training_set = []
+	for song in training_songs:
+		try:
+			for g in genre[song[0]]:
+				training_set.append((song[2], g))	# take the first ([0]'th) genre of the genres that the current song identifies with
+		except KeyError:
+			continue
 
-  for _ in range(18):
+	print "reading songs for training...",
+	f_test = open('mxm_dataset_test.txt', 'r')
+
+	for _ in range(17):
 	  # vaska first 18 header lines
 	  f_test.readline()
+	words = f_test.readline()
+	words = words.split(',')
 
-  testing_songs = []	# list of songs, each represented by a defaultdict
-  for i in range(18, 27161):
+	testing_songs = []	# list of songs, each represented by a defaultdict
+	for i in range(18, 27161):
 	  d = defaultdict(int)
 	  ligne = f_test.readline()
 	  ligne = ligne.split(',')
@@ -158,38 +95,18 @@ def read_testing_set_BoW():
 		  d[words[w_no-1]] = w_count	# word index starts from 1!
 	  # append the (track_id, mxm_id, defaultdict) to the list of songs
 	  testing_songs.append((track_id, mxm_id, d))
-  f_test.close()
-  print "done! Now will test..."
+	f_test.close()
+	print "done!"
+	# Now combine both into a training set
+	testing_set = []
+	for song in testing_songs:
+		try:
+			for g in genre[song[0]]:
+				testing_set.append((song[2], g))	# take the first ([0]'th) genre of the genres that the current song identifies with
+		except KeyError:
+			continue
+	return (training_set, testing_set)
 
 ''' ------------------------------------------------------------------------------------------------ '''
 
-# Next we use stochastic gradient descent to train a classifier
-print "training..."
-weights = stochastic_grad_descent(training_songs, genre, NUM_ITERS, 0.01)
-print "training complete."
-
-# training loss on the test set
-correct = 0
-keyerror = 0
-for song in training_songs:
-	try:
-		if (predict_genre(weights, song[2]) == genre[song[0]][0]):
-			correct += 1
-	except KeyError:
-		keyerror += 1
-# print accuracy, disregarding the cases where there was a keyerror
-print "training correctly identified:", 100*float(correct)/(len(training_songs) - keyerror), "%"
-
-# Now we sample the next songs in the original file and check the loss on them
-
-# testing the model
-correct = 0
-keyerror = 0
-for song in testing_songs:
-	try:
-		if (predict_genre(weights, song[2]) == genre[song[0]][0]):
-			correct += 1
-	except KeyError:
-		keyerror += 1
-# print accuracy, disregarding the cases where there was a keyerror
-print "testing correctly identified:", 100*float(correct)/(len(testing_songs) - keyerror), "%"
+# Now will use nltk to train a model
