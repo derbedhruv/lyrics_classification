@@ -23,6 +23,7 @@ def extract_artist(alph):
 	Scrapes songlyrics.com for artist names starting with @alph (should be single letter of english alphabet)
 	@param alph: single char, should be one of string.lowercase
 	"""
+	assert (alph in string.lowercase), "Only english alphabets allowed as arguments for extract_artist"
 	artist_count = 0
 	songs_total_alph = 0
 	artist_links = [alph]
