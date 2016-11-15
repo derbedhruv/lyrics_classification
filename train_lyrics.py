@@ -3,7 +3,7 @@ import MySQLdb
 from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from textblob import TextBlob
 import pandas as pd
 import re
