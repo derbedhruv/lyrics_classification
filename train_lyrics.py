@@ -25,13 +25,6 @@ import re
 
 logistic = LogisticRegression()
 
-# NOTE: Make sure mysql server has been started! 
-# > mysql.server start
-print 'establishing connection to db...',
-db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
-db_cursor = db.cursor()
-print 'done!'
-
 valid_cli_args = ['-d', '-f']
 # We fix upon 10 broad genres
 genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
@@ -123,6 +116,12 @@ if __name__ == "__main__":
 	assert option in valid_cli_args, '%s is not a valid argument!'%option
 	if option == '-d':
 		print 'Will grab data from MYSQL database..'
+		# NOTE: Make sure mysql server has been started! 
+		# > mysql.server start
+		print 'establishing connection to db...',
+		db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
+		db_cursor = db.cursor()
+		print 'done!'
 		dataset = get_data(genres=['Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk'])
 		train_logistic(dataset)
 	if option == '-f':
