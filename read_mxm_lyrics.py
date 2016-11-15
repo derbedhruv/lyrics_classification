@@ -2,6 +2,11 @@
 # As given on http://labrosa.ee.columbia.edu/millionsong/musixmatch
 import random
 from collections import defaultdict
+# from nltk.classify import NaiveBayesClassifier
+from sklearn.ensemble import RandomForestClassifier
+forest = RandomForestClassifier(n_estimators = 10) 	# TODO: What difference does changing n_estimators make
+from sklearn.feature_extraction import DictVectorizer	# converts dict to a vector for sklearn predictors
+import numpy
 
 # hardcode the genre vector
 genre_labels = ['Reggae', 'Latin', 'RnB', 'Jazz', 'Metal', 'Pop', 'Punk', 'Country', 'New Age', 'Rap', 'Rock', 'World', 'Blues', 'Electronic', 'Folk']
@@ -119,3 +124,21 @@ def read_data_BoW():
 
 # Now will use nltk to train a model
 genre = read_genres('msd_tagtraum_cd2.cls')
+train_set, test_set = read_data_BoW()
+# TODO: Clean up dataset as given on https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-1-for-beginners-bag-of-words
+
+# STRATEGY 1: Train using RandomForestClassifier (from sklearn)
+# train on training set - similar to https://www.kaggle.com/c/word2vec-nlp-tutorial/details/part-1-for-beginners-bag-of-words
+t = numpy.asarray(train_set)	# convert to a numpy array of dicts and strings
+X = v.fit_transform(t[:,0])		# convert numpy array (1st col) to vector, has shape (142671, 5000)
+forest = forest.fit(X, t[:,1])	# TRAIN
+# then prepare the test set, first convert to numpy arry and then generate matrix from sparse vectors
+test = numpy.asarray(test)	
+Xt = v.fit_transform(test[:,0]) 
+forest.predict(Xt)	# <---- this doesn't work out because the matrix Xt has a shape (19028, 4998) and the required no of features is 5000 
+
+# STRATEGY 2: sNaive Bayes using NLTK
+classifier = NaiveBayesClassifier.train(train_set)
+print 'accuracy :', nltk.classify.util.accuracy(classifier, test_set)
+
+# FURTHER READING: http://www.nltk.org/book/ch01.html
