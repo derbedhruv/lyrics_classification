@@ -135,7 +135,7 @@ def train_naiveBayes(dataset):
 	    max_features = 3000
 	)
 	# fit bag of words model and convert to relative frequencies instead of absolute counts
-	X_train_counts = vectorizer.fit_transform(dataset['lyrics'].tolist())
+	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
 	data_features = data_features.toarray()
 	tfidf_transformer = TfidfTransformer()
 	X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
