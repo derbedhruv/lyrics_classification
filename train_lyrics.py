@@ -213,6 +213,13 @@ def trainNeuralNet(dataset):
 	tfidf_transformer = TfidfTransformer()
 	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
 
+	# Now we prepare everything for logistic regression
+	X_train, X_test, y_train, y_test  = train_test_split(
+        X_train_tfidf, 
+        dataset['genre'],
+        train_size=0.80
+    )
+
 	# train NN
 	nn = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
 	nn = nn.fit(X=X_train, y=y_train)
@@ -246,4 +253,5 @@ if __name__ == "__main__":
 		print 'read complete. Training...'
 		# train_logistic(dataset)
 		# train_naiveBayes(dataset)
-		trainRandomForest(dataset)
+		# trainRandomForest(dataset)
+		trainNeuralNet(dataset)
