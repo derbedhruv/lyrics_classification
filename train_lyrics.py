@@ -21,7 +21,9 @@ import sys
 import MySQLdb
 from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import train_test_split
 from textblob import TextBlob
 import pandas as pd
@@ -95,7 +97,7 @@ def train_logistic(dataset):
 	    tokenizer = feature_parse,
 	    lowercase = True,
 	    stop_words = 'english',
-	    max_features = 3000		# more than this results in memory error. TODO: get around this.
+	    max_features = 3000		# can go upto 5000 on corn.stanford.edu
 	)
 	# Fit the data
 	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
@@ -106,7 +108,7 @@ def train_logistic(dataset):
 	X_train, X_test, y_train, y_test  = train_test_split(
         data_features, 
         dataset['genre'],
-        train_size=0.85
+        train_size=0.80
     )
 	LogisticRegressionClassifier = LogisticRegression()
 	LogisticRegressionClassifier = LogisticRegressionClassifier.fit(X=X_train, y=y_train)
@@ -117,6 +119,43 @@ def train_logistic(dataset):
 	print(classification_report(y_test, y_pred))
 
 	return LogisticRegressionClassifier
+
+
+def train_naiveBayes(dataset):
+	"""
+	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
+	Trains a Naive Bayes classifier and reports how well it performs
+	"""
+	# create an instance of CountVectorizer class which will vectorize the data
+	vectorizer = CountVectorizer(
+	    analyzer = 'word',
+	    tokenizer = feature_parse,
+	    lowercase = True,
+	    stop_words = 'english',
+	    max_features = 3000
+	)
+	# fit bag of words model and convert to relative frequencies instead of absolute counts
+	X_train_counts = count_vect.fit_transform(dataset['lyrics'].tolist())
+	data_features = data_features.toarray()
+	tfidf_transformer = TfidfTransformer()
+	X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+
+	# Now we prepare everything for logistic regression
+	X_train, X_test, y_train, y_test  = train_test_split(
+        X_train_tfidf, 
+        dataset['genre'],
+        train_size=0.80
+    )
+
+	# train classifier
+	naiveBayesClassifier = MultinomialNB().fit(X=X_train, y=y_train)
+	# print how well classification was done
+	y_pred = LogisticRegressionClassifier.predict(X_test)
+	from sklearn.metrics import classification_report
+	print(classification_report(y_test, y_pred))
+
+	return LogisticRegressionClassifier
+
 
 
 if __name__ == "__main__":
@@ -139,4 +178,5 @@ if __name__ == "__main__":
 		# Read data from the CSV file and call the classifier to train on it
 		dataset = pd.read_csv(filename)
 		print 'read complete. Training...'
-		train_logistic(dataset)
+		# train_logistic(dataset)
+		train_naiveBayes(dataset)
