@@ -10,6 +10,10 @@
 
 	Algorithms used are: 
 	- Logistic Regression
+	- Naive Bayes
+	- K-means clustering
+	- Random Forest
+	- Neural Networks
 
 """
 ''' Modules to read data from mysql, convert into a form which is pare-able by python, and then train data'''
@@ -47,6 +51,10 @@ def get_data(genres=genres):
 	Gets data from the db, arranges it in the form ('lyrics', genre_class), where genre_class is an int representing the genre
 	It correspondds to the index in the genres list. Returns a Panda object (dataframe).
 	"""
+	print 'establishing connection to db...',
+	db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
+	db_cursor = db.cursor()
+	print 'done!'
 	dataset = []
 	for label, genre in enumerate(genres):
 		data = get_songs_by_genre(genre)
@@ -86,7 +94,8 @@ def train_logistic(dataset):
 	    analyzer = 'word',
 	    tokenizer = feature_parse,
 	    lowercase = True,
-	    stop_words = 'english'
+	    stop_words = 'english',
+	    max_features = 3000		# more than this results in memory error. TODO: get around this.
 	)
 	# Fit the data
 	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
@@ -118,10 +127,6 @@ if __name__ == "__main__":
 		print 'Will grab data from MYSQL database..'
 		# NOTE: Make sure mysql server has been started! 
 		# > mysql.server start
-		print 'establishing connection to db...',
-		db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
-		db_cursor = db.cursor()
-		print 'done!'
 		dataset = get_data(genres=['Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk'])
 		train_logistic(dataset)
 	if option == '-f':
