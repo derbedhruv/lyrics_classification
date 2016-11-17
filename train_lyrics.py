@@ -35,15 +35,11 @@ genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz',
 
 # Format in which to put the songs:
 # genre, url, lyrics
-def get_songs_by_genre(genre_of_interest):
+def get_songs_by_genre(genre_of_interest, db_cursor):
 	"""
 	@param: genre_of_interest: The genre you are interested in, as a string
 	Send query to db for a particular genre
 	"""
-	print 'establishing connection to db...',
-	db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
-	db_cursor = db.cursor()
-	print 'done!'
 	query = "select lyrics from song where genre = '%s'" %genre_of_interest
 	db_cursor.execute(query)
 	data = db_cursor.fetchall()
@@ -55,9 +51,13 @@ def get_data(genres=genres):
 	Gets data from the db, arranges it in the form ('lyrics', genre_class), where genre_class is an int representing the genre
 	It correspondds to the index in the genres list. Returns a Panda object (dataframe).
 	"""
+	print 'establishing connection to db...',
+	db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
+	db_cursor = db.cursor()
+	print 'done!'
 	dataset = []
 	for label, genre in enumerate(genres):
-		data = get_songs_by_genre(genre)
+		data = get_songs_by_genre(genre, db_cursor)
 		for song in data:
 			# song is a singleton tuple (since the db query returns only tuples), so need to extract
 			dataset.append([song[0], label])
