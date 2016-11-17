@@ -11,8 +11,8 @@
 	Algorithms used are: 
 	- Logistic Regression
 	- Naive Bayes
-	- K-means clustering
 	- Random Forest
+	- K-means clustering
 	- Neural Networks
 
 """
@@ -25,7 +25,9 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
 from textblob import TextBlob
 import pandas as pd
 import re
@@ -117,11 +119,14 @@ def train_logistic(dataset):
 
 	# print how well classification was done
 	y_pred = LogisticRegressionClassifier.predict(X_test)
-	from sklearn.metrics import classification_report
 	print(classification_report(y_test, y_pred))
 
 	return LogisticRegressionClassifier
 
+
+def get_features(dataset):
+	# TODO: Add features/vectorizer to this, modularize code!
+	return None
 
 def train_naiveBayes(dataset):
 	"""
@@ -154,7 +159,6 @@ def train_naiveBayes(dataset):
 	naiveBayesClassifier = MultinomialNB().fit(X=X_train, y=y_train)
 	# print how well classification was done
 	y_pred = naiveBayesClassifier.predict(X_test)
-	from sklearn.metrics import classification_report
 	print(classification_report(y_test, y_pred))
 
 	return naiveBayesClassifier 
@@ -187,10 +191,37 @@ def trainRandomForest(dataset):
 	forest = forest.fit(X=X_train, y=y_train)
 
 	y_pred = forest.predict(X_test)
-	from sklearn.metrics import classification_report
 	print(classification_report(y_test, y_pred))
 
 	return forest 
+
+def trainNeuralNet(dataset):
+	"""
+	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
+	Trains a neural network
+	REF: http://scikit-learn.org/stable/modules/neural_networks_supervised.html
+	"""
+	vectorizer = CountVectorizer(
+	    analyzer = 'word',
+	    tokenizer = feature_parse,
+	    lowercase = True,
+	    stop_words = 'english',
+	    max_features = 3000
+	)
+	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
+	data_features = data_features.toarray()
+	tfidf_transformer = TfidfTransformer()
+	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
+
+	# train NN
+	nn = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+	nn = nn.fit(X=X_train, y=y_train)
+
+	y_pred = nn.predict(X_test)
+	print(classification_report(y_test, y_pred))
+
+	return nn
+
 
 
 if __name__ == "__main__":
