@@ -24,6 +24,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from textblob import TextBlob
 import pandas as pd
@@ -90,6 +91,7 @@ def train_logistic(dataset):
 	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
 	trains a logistic regression classifier and reports how well it performs on a cross-validation dataset.
 	returns the fitted classifier object (sklearn.linear_model.LogisticRegression).
+	REF: https://www.codementor.io/python/tutorial/data-science-python-r-sentiment-classification-machine-learning
 	"""
 	# create an instance of CountVectorizer class which will vectorize the data
 	vectorizer = CountVectorizer(
@@ -125,6 +127,7 @@ def train_naiveBayes(dataset):
 	"""
 	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
 	Trains a Naive Bayes classifier and reports how well it performs
+	REF: http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html
 	"""
 	# create an instance of CountVectorizer class which will vectorize the data
 	vectorizer = CountVectorizer(
@@ -156,6 +159,38 @@ def train_naiveBayes(dataset):
 
 	return naiveBayesClassifier 
 
+def trainRandomForest(dataset):
+	"""
+	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
+	Trains a random forest classifier 
+	"""
+	vectorizer = CountVectorizer(
+	    analyzer = 'word',
+	    tokenizer = feature_parse,
+	    lowercase = True,
+	    stop_words = 'english',
+	    max_features = 3000
+	)
+	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
+	data_features = data_features.toarray()
+	tfidf_transformer = TfidfTransformer()
+	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
+
+	# Now we prepare everything for logistic regression
+	X_train, X_test, y_train, y_test  = train_test_split(
+        X_train_tfidf, 
+        dataset['genre'],
+        train_size=0.80
+    )
+	# random forest classifier with 100 trees
+	forest = RandomForestClassifier(n_estimators = 100) 
+	forest = forest.fit(X=X_train, y=y_train)
+
+	y_pred = forest.predict(X_test)
+	from sklearn.metrics import classification_report
+	print(classification_report(y_test, y_pred))
+
+	return forest 
 
 
 if __name__ == "__main__":
@@ -179,4 +214,5 @@ if __name__ == "__main__":
 		dataset = pd.read_csv(filename)
 		print 'read complete. Training...'
 		# train_logistic(dataset)
-		train_naiveBayes(dataset)
+		# train_naiveBayes(dataset)
+		trainRandomForest(dataset)
