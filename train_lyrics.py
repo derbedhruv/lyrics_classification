@@ -138,7 +138,7 @@ def train_naiveBayes(dataset):
 	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
 	data_features = data_features.toarray()
 	tfidf_transformer = TfidfTransformer()
-	X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
 
 	# Now we prepare everything for logistic regression
 	X_train, X_test, y_train, y_test  = train_test_split(
@@ -150,11 +150,11 @@ def train_naiveBayes(dataset):
 	# train classifier
 	naiveBayesClassifier = MultinomialNB().fit(X=X_train, y=y_train)
 	# print how well classification was done
-	y_pred = LogisticRegressionClassifier.predict(X_test)
+	y_pred = naiveBayesClassifier.predict(X_test)
 	from sklearn.metrics import classification_report
 	print(classification_report(y_test, y_pred))
 
-	return LogisticRegressionClassifier
+	return naiveBayesClassifier 
 
 
 
