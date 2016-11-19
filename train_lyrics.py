@@ -12,7 +12,6 @@
 	- Logistic Regression
 	- Naive Bayes
 	- Random Forest
-	- K-means clustering
 	- Neural Networks
 
 """
@@ -220,7 +219,7 @@ def trainNeuralNet(dataset):
         train_size=0.80
     )
 
-	# train NN
+	# train NN, limited memory BFGS, step size 1e-5
 	nn = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
 	nn = nn.fit(X=X_train, y=y_train)
 
