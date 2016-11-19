@@ -190,6 +190,7 @@ def sgd_performance(weights, testdata, genre_labels):
 			recall[genre_index] = tp[genre_index]/(tp[genre_index] + fn[genre_index])
 			print 'genre = ', genre_labels[genre_index], 'precision:', precision[genre_index], 'recall:', recall[genre_index]
 		except ZeroDivisionError:
+			# happens when tp and fp,fn are 0 due to not enough data being there (hence denominator becomes 0)
 			print 'Not enough data for genre', genre_labels[genre_index]
 
 
@@ -201,13 +202,13 @@ if __name__ == "__main__":
 	train_data = [(bag_of_words(l), g) for i,l,g in train_data]		# pandas also adds the index of the row, will be removed in this process
 	# train stochastic gradient descent on this, get weights
 	genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
-	w = stochastic_grad_descent(train_data[:100], genre_labels)
+	w = stochastic_grad_descent(train_data, genre_labels)
 
 	# Next, find precision recall for all these
 	test_data = pandas.read_csv('test.csv')
 	test_data = test_data.to_records(index=False)		# Now is a list of tuples (lyrics, genre)
 	test_data = [(bag_of_words(l), g) for i,l,g in test_data]	
-	sgd_performance(w, test_data[:100], genre_labels)
+	sgd_performance(w, test_data, genre_labels)
 
 
 
