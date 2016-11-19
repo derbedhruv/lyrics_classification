@@ -142,8 +142,8 @@ def predict_genre_sgd(weights, x, genre_labels):
 	This function returns the predicted genre as a string, i.e. one of genre_labels
 	Which is the one which gives the max dotProduct with the corresonding genre's weight
 	"""
-	_, i = max((dotProduct(weight, x), i) for i, weight in enumerate(weights))
-	return genre_labels[i]
+	_, highest_weight_label = max((dotProduct(weight, x), i) for i, weight in enumerate(weights))
+	return highest_weight_label
 
 def sgd_performance(weights, testdata, genre_labels):
 	"""
@@ -157,37 +157,40 @@ def sgd_performance(weights, testdata, genre_labels):
 
 	# Now find the precision and recall for each genre
 	# dicts mapping genres to actual values
-	fp = defaultdict(int)
-	tp = defaultdict(int)
-	tn = defaultdict(int)
-	fn = defaultdict(int)
+	fp = defaultdict(float)
+	tp = defaultdict(float)
+	tn = defaultdict(float)
+	fn = defaultdict(float)
 
 	for row in testdata:
 		# get classification for song
-		genre = row[1]
-		song = row[0]
-		predicted_genre = predict_genre_sgd(weights, song, genre_labels)
-		# print predicted_genre
-		if predicted_genre == genre_labels[genre]:
+		ground_truth_test_genre = row[1]
+		ground_truth_test_lyric = row[0]
+		predicted_genre = predict_genre_sgd(weights, ground_truth_test_lyric, genre_labels)
+		# print 'predicted_genre:', predicted_genre, 'genre:', ground_truth_test_genre
+		if predicted_genre == ground_truth_test_genre:
 			# true positive for this genre
-			tp[genre] += 1
+			tp[ground_truth_test_genre] += 1
 			# true negative for all other genres
-			for g in [x for x in genre_labels if x != genre]:
+			for g in [x for x in range(len(genre_labels)) if x != ground_truth_test_genre]:
 				tn[g] += 1
 		else:
 			# wrong prediction, this is a false negative for this genre
-			fn[genre] += 1
+			fn[ground_truth_test_genre] += 1
 			# and it is a false positive for all others
-			for g in [x for x in genre_labels if x != genre]:
+			for g in [x for x in range(len(genre_labels)) if x != ground_truth_test_genre]:
 				fp[g] += 1
-	precision = defaultdict(int)
-	recall = defaultdict(int)
+	precision = defaultdict(float)
+	recall = defaultdict(float)
 
-	for genre in genre_labels:
-		print tp[genre], fn[genre]
-		precision[genre] = tp[genre]/(tp[genre] + fp[genre])
-		recall[genre] = tp[genre]/(tp[genre] + fn[genre])
-		print 'genre = ', genre_labels[genre], 'precision:', precision[genre], 'recall:', recall[genre]
+	for genre_index in range(len(genre_labels)):
+		# print tp[genre], fn[genre]
+		try:
+			precision[genre_index] = tp[genre_index]/(tp[genre_index] + fp[genre_index])
+			recall[genre_index] = tp[genre_index]/(tp[genre_index] + fn[genre_index])
+			print 'genre = ', genre_labels[genre_index], 'precision:', precision[genre_index], 'recall:', recall[genre_index]
+		except ZeroDivisionError:
+			print 'Not enough data for genre', genre_labels[genre_index]
 
 
 
@@ -198,13 +201,13 @@ if __name__ == "__main__":
 	train_data = [(bag_of_words(l), g) for i,l,g in train_data]		# pandas also adds the index of the row, will be removed in this process
 	# train stochastic gradient descent on this, get weights
 	genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
-	w = stochastic_grad_descent(train_data[:10], genre_labels)
+	w = stochastic_grad_descent(train_data[:100], genre_labels)
 
 	# Next, find precision recall for all these
 	test_data = pandas.read_csv('test.csv')
 	test_data = test_data.to_records(index=False)		# Now is a list of tuples (lyrics, genre)
 	test_data = [(bag_of_words(l), g) for i,l,g in test_data]	
-	sgd_performance(w, test_data[:10], genre_labels)
+	sgd_performance(w, test_data[:100], genre_labels)
 
 
 
