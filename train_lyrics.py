@@ -252,5 +252,5 @@ if __name__ == "__main__":
 		print 'read complete. Training...'
 		# train_logistic(dataset)
 		# train_naiveBayes(dataset)
-		# trainRandomForest(dataset)
+		# trainRandomForest(dataset)		# READ https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm
 		trainNeuralNet(dataset)
