@@ -82,11 +82,16 @@ def stochastic_grad_descent(training_set, genre_labels, numIters=10, eta=0.01):
 	D = len(training_set)
 	random.seed(88)
 	def loss(xx, yy, weights):
-		# the hinge loss in 0-1 prediction of xx as yy
+		"""
+		@param xx: song features
+		@param yy: song label (ground truth)
+		@param weights: the weights of the model (dict of dicts)
+		Computes the hinge loss in 0-1 prediction of xx as yy
+		"""
 		out = 0
-		for i, weight in enumerate(weights):
+		for genre_label_index, weight in enumerate(weights):
 		     # return 1 if it is the genre corresponding to this weight, else return -1
-		     if yy[0] == i:
+		     if yy == genre_label_index:
 		             y = 1
 		     else:
 		             y = -1
@@ -95,27 +100,38 @@ def stochastic_grad_descent(training_set, genre_labels, numIters=10, eta=0.01):
 		return out
          		
 	def increment_weight(xx, yy, weights):
+		"""
+		@param xx: the song features
+		@param yy: the genre (ground truth)
+		@param weights: the current model weights to increment
+		"""
 		# use the increment() function to make things convenient
-		for i, weight in enumerate(weights):
+		for genre_label_index, weight in enumerate(weights):
 			# return 1 if it is the genre corresponding to this weight, else return -1
-			if yy[0] == i:
+			if yy == genre_label_index:
 				y = 1
 			else:
 				y = -1
 			if y*dotProduct(weight, xx) < 1:
 				increment(weight, eta*y, xx)
+
+	''' STOCHASTIC GRADIENT DESCENT '''
 	for i in range(numIters):
 		# calculate loss function with current vector 'weights'
 		lossFunc = 0
 		for song in training_set:
-		 try:
-		     lossFunc += loss(song[0], genre_labels[song[1]], weights)/D
-		     # choose random vector element and update the gradient for that
-		     random_song = random.sample(training_set, 1)[0]		# returns a list of single tuple, need to extract that tuple
-		     increment_weight(random_song[0], genre_labels[random_song[1]], weights)
-		 except KeyError:
-		         # skip that example
-		         pass
+			# extract lyrics and genre label
+			song_lyric = song[0]
+			song_genre = song[1]
+
+			# pass these two to the cumulative loss function
+			lossFunc += loss(song_lyric, song_genre, weights)/D
+
+			# choose random vector element and update the gradient for that
+			random_song = random.sample(training_set, 1)[0]		# returns a list of single tuple, need to extract that tuple
+			random_song_lyric = random_song[0]
+			random_song_genre = random_song[1]
+			increment_weight(random_song_lyric, random_song_genre, weights)
 		# print "i = ",i,", loss = ", lossFunc
 	return weights
 
@@ -182,13 +198,13 @@ if __name__ == "__main__":
 	train_data = [(bag_of_words(l), g) for i,l,g in train_data]		# pandas also adds the index of the row, will be removed in this process
 	# train stochastic gradient descent on this, get weights
 	genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
-	w = stochastic_grad_descent(train_data, genre_labels)
+	w = stochastic_grad_descent(train_data[:10], genre_labels)
 
 	# Next, find precision recall for all these
 	test_data = pandas.read_csv('test.csv')
 	test_data = test_data.to_records(index=False)		# Now is a list of tuples (lyrics, genre)
 	test_data = [(bag_of_words(l), g) for i,l,g in test_data]	
-	sgd_performance(w, test_data, genre_labels)
+	sgd_performance(w, test_data[:10], genre_labels)
 
 
 
