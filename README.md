@@ -8,9 +8,9 @@ The purpose of this course mini-project is to build an NLP system for the classi
 Commits will be pushed to this repo throughout November and December 2016. Thereafter, this may evolve into an audio-based music recommendation system in tandem.
 
 # Data
-The lyrics were scraped from [songlyrics.com](http://songlyrics.com), artists A-C with artists having more than 25 songs each, and for which Genre was not NULL.
+The lyrics were scraped from [songlyrics.com](http://songlyrics.com), artists A-C with artists having more than 25 songs each, and for which Genre was not NULL. 81940 songs were scraped in total.
 
-The baseline results are as follows (stochastic gradient descent with hinge loss, on 65552 songs)
+The baseline results are as follows (stochastic gradient descent with hinge loss, trained on 65552 songs and tested on 16388 songs)
 
 | Genre       	| Precision       	| Recall         	|
 |-------------	|-----------------	|----------------	|
