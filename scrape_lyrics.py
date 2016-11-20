@@ -16,12 +16,15 @@ db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.
 db_cursor = db.cursor()
 
 # scrape the whole website slowly
+
 # this will increase the efficiency and speed of artists scraped, since mysql can take HUGE transactions per second
 genres = defaultdict(int)
-def extract_artist(alph):
+def extract_artist(alph, artist_page = 0, genres_considered=['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']):
 	"""
-	Scrapes songlyrics.com for artist names starting with @alph (should be single letter of english alphabet)
 	@param alph: single char, should be one of string.lowercase
+	@param genres: the list of genres to be considered for scraping (default all 10)
+	@param artist_page: the artist pagination to start from (default 0)
+	Scrapes songlyrics.com for artist names starting with @alph (should be single letter of english alphabet)
 	"""
 	assert (alph in string.lowercase), "Only english alphabets allowed as arguments for extract_artist"
 	artist_count = 0
@@ -35,6 +38,7 @@ def extract_artist(alph):
 	alph_pagination = soup_html_alph.findAll("li", { "class" : "li_pagination" })
 	# Now we can parse this.. need to go from  zz[1] to zz[n-2]
 	soup = BeautifulSoup(str(alph_pagination[1]), 'html.parser')
+
 	# now we make a list of all pages for artists starting with 'alph' - then we will iterate through it
 	for p in alph_pagination[0:-1]:
 	  current_link = str(p.find('a'))
@@ -45,7 +49,7 @@ def extract_artist(alph):
 	    artist_links.append(link['href'])
 	artist_count += len(artist_links)
 	# Now will go to each of these pages in artist links and retrieve songs
-	for i,al in enumerate(artist_links):
+	for i, al in enumerate(artist_links[artist_page:]):
 		song_count = 0
 		uri = 'http://www.songlyrics.com/'+al
 		response = requests.get(uri)
@@ -53,10 +57,7 @@ def extract_artist(alph):
 		y = BeautifulSoup(x, "html.parser")
 		lyrix = y.findAll("td", { "class" : "td-item" })
 		print 'exploring', al
-		# a = BeautifulSoup(str(a), 'html.parser')
-		# song_count += int(art_lyr_text[0])
 		# and now we go down a further level to get the actual songs of each artist
-		# go to artist page
 		artist_pages = []
 		z = y.findAll("table", { "class" : "tracklist" })	# the table of entries of artists
 		soup = BeautifulSoup(str(z[0]), 'html.parser')
@@ -81,6 +82,7 @@ def extract_artist(alph):
 		    continue	# skip this one
 		  artist_page_html  = response.text
 		  artist_page_html_soup = BeautifulSoup(artist_page_html, "html.parser")
+
 		  # on artist page, get Genre
 		  artist_title = artist_page_html_soup.findAll("div", { "class" : "pagetitle" })  # get the title div which has the genres
 		  artist_songs = artist_page_html_soup.findAll("table", { "class" : "tracklist" })	# get all songs
@@ -91,6 +93,10 @@ def extract_artist(alph):
 		    artist_title_soup = BeautifulSoup(str(artist_title[0]), 'html.parser')   # soup banaao
 		    genre = artist_title_soup.a.text		# <- this is the required genre append to hash table
 		    genre = genre.encode('utf-8')
+		    # Check if this genre is in the list, otherwise skip
+		    if not genre in genres_considered:
+		    	print 'not considering genre', genre
+		    	continue
 		    genres[genre] += 1	# add to the new genre list
 		    song_count += 1
 		    # print current_artist_url, genre
@@ -127,7 +133,9 @@ def extract_artist(alph):
 	  print g, ':', genres[g]
 
 if __name__ == "__main__":
-	for alph in string.lowercase:
+	# alphabets_list = string.lowercase
+	alphabets_list = ['d']
+	for alph in alphabets_list:
 		# TODO: spawn a new thread for each call to extract_artist
-		extract_artist(alph)
+		extract_artist(alph, artist_page = 56, genres_considered = ['R&B;', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk'])
 

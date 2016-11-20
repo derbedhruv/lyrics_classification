@@ -6,6 +6,7 @@ import pandas
 from collections import defaultdict
 import nltk
 import random
+import math
 dataset = pandas.read_csv('lyrix.csv')	# data set
 
 
@@ -32,6 +33,14 @@ def dotProduct(d1, d2):
         return dotProduct(d2, d1)
     else:
         return sum(d1.get(f, 0) * v for f, v in d2.items())
+
+def logistic(weights, x):
+	"""
+	@param weights: The weights vector trained on a particular binary class
+	@param x: the feature vector reprsentation of your input datapoint
+	Returns the logistic function (logistic(z) = 1/(1 + exp(-z))) of dotProduct(weights, x)
+	"""
+	return 1./(1 + math.exp(-dotProduct(weights, x)))
 
 # 1. sentence count
 def sentence_count(dataset):
@@ -81,7 +90,7 @@ def stochastic_grad_descent(training_set, genre_labels, numIters=10, eta=0.01):
 	weights = [{} for _ in range(len(genre_labels))]
 	D = len(training_set)
 	random.seed(88)
-	def loss(xx, yy, weights):
+	def hinge_loss(xx, yy, weights):
 		"""
 		@param xx: song features
 		@param yy: song label (ground truth)
@@ -125,7 +134,7 @@ def stochastic_grad_descent(training_set, genre_labels, numIters=10, eta=0.01):
 			song_genre = song[1]
 
 			# pass these two to the cumulative loss function
-			lossFunc += loss(song_lyric, song_genre, weights)/D
+			lossFunc += hinge_loss(song_lyric, song_genre, weights)/D
 
 			# choose random vector element and update the gradient for that
 			random_song = random.sample(training_set, 1)[0]		# returns a list of single tuple, need to extract that tuple
@@ -204,6 +213,7 @@ if __name__ == "__main__":
 	train_data = pandas.read_csv('train.csv')
 	train_data = train_data.to_records(index=False)		# Now is a list of tuples (lyrics, genre)
 	train_data = [(bag_of_words(l), g) for i,l,g in train_data]		# pandas also adds the index of the row, will be removed in this process
+
 	# train stochastic gradient descent on this, get weights
 	genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 	w = stochastic_grad_descent(train_data[:10], genre_labels)
