@@ -199,6 +199,7 @@ def trainNeuralNet(dataset):
 	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
 	Trains a neural network
 	REF: http://scikit-learn.org/stable/modules/neural_networks_supervised.html
+	# implement from scratch using http://machinelearningmastery.com/implement-random-forest-scratch-python/
 	"""
 	vectorizer = CountVectorizer(
 	    analyzer = 'word',
