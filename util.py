@@ -157,13 +157,13 @@ def performance(prediction_function, testdata, class_labels):
 			pretty_print(class_labels[genre_index])
 			print 'NA\t\tNA\t\tNA'
 	print len(testdata)
-	print 'Accuracy : ', (sum(x for x in tp) + sum(x for x in tn))/len(testdata)
+	print 'Accuracy : ', float(sum(x for x in tp) + sum(x for x in tn))/len(testdata)
 
 # Caluclating performance for baseline
 if __name__ == "__main__":
 	import classifiers
 	# pandas also adds the index of the row, will be removed in this process
-	train_data = prepare_data('train.csv', num_datapoints=100)
+	train_data = prepare_data('train.csv')
 
 	# train stochastic gradient descent on this, get weights
 	genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
@@ -172,7 +172,7 @@ if __name__ == "__main__":
 	baseline.saveModel('baseline-21Nov16.txt')
 
 	# Next, find precision recall for all these
-	test_data = prepare_data('test.csv', num_datapoints=100)
+	test_data = prepare_data('test.csv')
 	performance(baseline.predict, test_data, genre_labels)
 
 
