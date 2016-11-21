@@ -99,11 +99,14 @@ class Baseline():
 		_, highest_weight_label = max((dotProduct(weight, x), i) for i, weight in enumerate(self.weights))
 		return highest_weight_label
 
-	def performance(self, testdata=self.training_set):
+	def performance(self, testdata=None):
 		"""
 		@param testdata: The testdata in the same form as the training data, i.e. a list of tuples (feature, class)
 		Leave this blank to give the training error itself.
 		"""
+		if testdata == None:
+			# default
+			testdata = self.training_set
 		# find the number of rows for each genre type
 		genre_count = defaultdict(int)
 		for row in testdata:
