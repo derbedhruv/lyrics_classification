@@ -160,7 +160,7 @@ class RandomForestClassifier():
 	# A class of problems which are the random forest classifier
 	# trains a classifier given the data, number of trees and number of features
 
-	def __init__(self, training_data, num_trees, num_features, class_labels):
+	def __init__(self, training_data, num_trees, num_features, class_labels, tree_depth, random_seed=None):
 		"""
 		@param dataset: A dataset of points (x, y) where x is a feature vector 
 						(defaultdict) representation of a song and y is the 
@@ -169,20 +169,28 @@ class RandomForestClassifier():
 						finding the best split. More features takes longer but
 						would likely give better results
 		@param class_labels: The set of all possible output class labels
+		@param tree_depth: The max depth of each decision tree which would be formed
+		@param random_seed: A random seed value, in case of debugging where reproducibility is desired
 		"""
 		self.num_features = num_features
 		self.num_trees = num_trees
 		self.data = training_data
 		self.class_labels = class_labels
+		self.maxdepth = tree_depth
 
+		if not random_seed == None:
+			# in case reproducible results are desired
+			random.seed(random_seed)
 
-	def leaf_node(self, group):
+	def create_leaf(self, group):
 		"""
 		@param group: A group (subset) of data as a list of (features_dict, class)
 		Create a leaf node class, as the mode of the classes in the group
 		"""
 		classes = [x[1] for x in group]
-		return max(classes, key=classes.count)
+		value = max(classes, key=classes.count)
+		# print value
+		return value
 
 	def split_into_groups(self, rfeature, value):
 		"""
@@ -224,8 +232,9 @@ class RandomForestClassifier():
 		return gini_impurity
 
 
-	def find_best_split(self):
+	def find_best_split(self, data):
 		"""
+		@param data: A subset of the dataset, which will be recursively processed
 		Returns the best split point, i.e. a feature and corresponding value 
 		of one feature out of 'num_features' candidates which splits 'dataset' into the 
 		most homogenous distribution of classes (genres)
@@ -235,13 +244,13 @@ class RandomForestClassifier():
 		best_split_score = 10000	# arbitrary large number
 		best_split_feature_value = 10000
 		# first, randomly select unique num_features out of all features
-		all_features = set(y for t in self.data for y in t[0].keys())
+		all_features = set(y for t in data for y in t[0].keys())
 		random_feature_set = random.sample(all_features, self.num_features)
 
 		# for each of these randomly sampled features, go through all 
 		# rows in dataset and find the gini index of each split
 		for rfeature in random_feature_set:
-			for datapoint in self.data:
+			for datapoint in data:
 				split_groups = self.split_into_groups(rfeature, datapoint[0][rfeature])
 				split_purity = self.gini_impurity(split_groups)
 				if split_purity < best_split_score:
@@ -251,6 +260,34 @@ class RandomForestClassifier():
 					best_split_feature_value = datapoint[0][rfeature]
 		return {'groups': groups, 'best_split_feature':best_split_feature, 'best_split_score':best_split_score, 'best_split_feature_value':best_split_feature_value}
 
-	def generate(self):
-		# fit the classifier
-		return self.find_best_split()	# THIS IS ONLY FOR
+	def get_split(self, node, current_depth):
+		# recursive function
+		left, right = node['groups']	# extract the two split groups
+		del node['groups']	# delete this to prevent excessive memory use
+		# base case: check if either of these groups is empty
+		if not left or not right:
+			# this means that the node entered is a leaf node. 
+			# Hence both the left and right values of the node are equal to the majority class
+			node['left'] = self.create_leaf(left + right)
+			node['right'] = node['left']
+			return
+		# Check if max depth has been reached
+		if current_depth >= self.maxdepth:
+			# make both child nodes into leaves
+			node['left'] = self.create_leaf(left)
+			node['right'] = self.create_leaf(right)
+			return
+		# Process recursively, if none of these is the case
+		node['left'] = self.find_best_split(left)
+		self.get_split(node['left'], current_depth+1)
+		node['right'] = self.find_best_split(right)
+		self.get_split(node['right'], current_depth+1)
+
+	def generate_decision_tree(self):
+		# recursively generates a decision tree
+		# this will be a defaultdict with 'left' and 'right' keys indicating 
+		root_node = self.find_best_split(self.data)
+		self.get_split(root_node, current_depth=1)
+		return root_node
+
+
