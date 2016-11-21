@@ -131,31 +131,49 @@ def performance(prediction_function, testdata, class_labels):
 	recall = defaultdict(float)
 	accuracy = defaultdict(float)
 
+	def pretty_print(instring):
+		"""
+		Aligns while printing out by putting appropriate number of tabs
+		"""
+		print instring,
+		tabs = '\t\t'
+		if len(instring) > 5:
+			 tabs = '\t'
+		print tabs,
+
+
 	print 'Genre\t\tPrecision\tRecall\tF-1 Score'
 	for genre_index in range(len(class_labels)):
 		try:
-			precision[genre_index] = tp[genre_index]/(tp[genre_index] + fp[genre_index])
-			recall[genre_index] = tp[genre_index]/(tp[genre_index] + fn[genre_index])
-			f1 = 2*precision[genre_index]*recall[genre_index]/(precision[genre_index] + recall[genre_index])
-			print class_labels[genre_index], '\t\t', precision[genre_index], '\t\t', recall[genre_index], '\t\t', f1
+			precision[genre_index] = round(tp[genre_index]/(tp[genre_index] + fp[genre_index]), 4)
+			recall[genre_index] = round(tp[genre_index]/(tp[genre_index] + fn[genre_index]), 4)
+
+			f1 = round(2*precision[genre_index]*recall[genre_index]/(precision[genre_index] + recall[genre_index]), 4)
+
+			pretty_print(class_labels[genre_index])
+			print precision[genre_index], '\t\t', recall[genre_index], '\t\t', f1
 		except ZeroDivisionError:
 			# happens when tp and fp,fn are 0 due to not enough data being there (hence denominator becomes 0)
-			print class_labels[genre_index], '\t\tNA\t\tNA\t\tNA'
+			pretty_print(class_labels[genre_index])
+			print 'NA\t\tNA\t\tNA'
 	print len(testdata)
 	print 'Accuracy : ', (sum(x for x in tp) + sum(x for x in tn))/len(testdata)
 
 # Caluclating performance for baseline
 if __name__ == "__main__":
+	import classifiers
 	# pandas also adds the index of the row, will be removed in this process
-	train_data = read_data('train.csv')
+	train_data = prepare_data('train.csv', num_datapoints=100)
 
 	# train stochastic gradient descent on this, get weights
 	genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
-	w = stochastic_grad_descent(train_data[:10], genre_labels)
+	baseline = classifiers.Baseline(train_data, genre_labels, debug=True)
+	baseline.stochastic_grad_descent()
+	baseline.saveModel('baseline-21Nov16.txt')
 
 	# Next, find precision recall for all these
-	test_data = read_data('test.csv')
-	sgd_performance(w, test_data[:10], genre_labels)
+	test_data = prepare_data('test.csv', num_datapoints=100)
+	performance(baseline.predict, test_data, genre_labels)
 
 
 
