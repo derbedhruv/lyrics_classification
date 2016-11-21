@@ -134,8 +134,8 @@ def extract_artist(alph, artist_page = 0, genres_considered=['Rock', 'Pop', 'Hip
 
 if __name__ == "__main__":
 	# alphabets_list = string.lowercase
-	alphabets_list = ['d']
+	alphabets_list = ['l']
 	for alph in alphabets_list:
 		# TODO: spawn a new thread for each call to extract_artist
-		extract_artist(alph, artist_page = 56, genres_considered = ['R&B;', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk'])
+		extract_artist(alph, artist_page = 37, genres_considered = ['Blues', 'Christian', 'Folk'])
 

@@ -207,6 +207,81 @@ def sgd_performance(weights, testdata, genre_labels):
 	print 'Accuracy : ', (sum(x for x in tp) + sum(x for x in tn))/len(testdata)
 
 
+# implementing a random forest classifier
+def split(dataset, rfeature, value):
+	"""
+	@param dataset: A dataset of points (x, y) where x is a feature vector 
+					(defaultdict) representation of a song and y is the 
+					genre (0...9) that song belongs to
+	@param rfeature: One selected feature
+	@param value: One value of rfeature
+
+	Splits the dataset into two groups, one with value at 'rfeature' greater
+	or lesser than 'value'
+	"""
+	group_lower = []
+	group_higher = []
+	for datapoint in dataset:
+		if datapoint[rfeature] > value:
+			group_higher.append(datapoint)
+		else:
+			group_lower.append(datapoint)
+	return (group_lower, group_higher)
+
+def gini_impurity(groups, class_labels):
+	"""
+	Gini impurity is a measure of how often a randomly chosen element 
+	from the set would be incorrectly labeled if it was randomly labeled 
+	according to the distribution of labels in the subset
+	https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity
+	"""
+	gini_impurity = 0.
+	for label in class_labels:
+		for group in groups:
+			group_size = float(len(group))	# float so quotient is also float
+			if group_size == 0:
+				# there's no impurity that can be measured 
+				continue
+			group_labels = [x[1] for x in group]	# each element of group is (features, label)
+			label_ratio = group_labels.count(label)/group_size
+			gini_impurity += label_ratio*(1 - label_ratio)
+
+
+def find_best_split(dataset, num_features, class_labels):
+	"""
+	@param dataset: A dataset of points (x, y) where x is a feature vector 
+					(defaultdict) representation of a song and y is the 
+					genre (0...9) that song belongs to
+	@param num_features: the number of features to (randomly) consider for 
+					finding the best split. More features takes longer but
+					would likely give better results
+	@param class_labels: The set of all possible output class labels
+
+	Returns the best split point, i.e. a feature and corresponding value 
+	of one feature out of num_features which splits 'dataset' into the 
+	most homogenous distribution of classes (genres)
+	"""
+	groups = None
+	best_split_feature = None
+	best_split_score = 10000	# arbitrary large number
+	best_split_feature_value = 10000
+	# first, randomly select unique num_features out of all features
+	all_features = set(y for t in train_data for y in t[0].keys())
+	random_feature_set = random.sample(all_features, num_features)
+
+	# for each of these randomly sampled features, go through all 
+	# rows in dataset and find the gini index of each split
+	for rfeature in random_feature_set:
+		for datapoint in dataset:
+			split_groups = split(dataset, rfeature, datapoint[rfeature])
+			split_purity = gini_impurity(split_groups, class_labels)
+			if split_purity < best_split_score:
+				groups = split_groups
+				best_split_score = split_purity
+				best_split_feature = rfeature
+				best_split_feature_value = datapoint[rfeature]
+	return {'groups': groups, 'best_split_feature':best_split_feature, 'best_split_score':best_split_score, 'best_split_feature_value':best_split_feature_value}
+
 
 # Caluclating performance for baseline
 if __name__ == "__main__":
