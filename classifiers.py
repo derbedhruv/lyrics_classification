@@ -7,6 +7,7 @@
 from util import *
 import random
 import math
+import pickle
 
 # baseline class
 class Baseline():
@@ -98,6 +99,11 @@ class Baseline():
 		"""
 		_, highest_weight_label = max((dotProduct(weight, x), i) for i, weight in enumerate(self.weights))
 		return highest_weight_label
+
+	def save(self, filename):
+		f = open(filename, 'w')
+		pickle.dump(self.weights, f)
+		f.close()
 
 
 # implementing a random forest classifier
