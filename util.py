@@ -208,105 +208,125 @@ def sgd_performance(weights, testdata, genre_labels):
 
 
 # implementing a random forest classifier
-def leaf_node(group):
-	"""
-	@param group: A group (subset) of data as a list of (features_dict, class)
-	Create a leaf node class, as the mode of the classes in the group
-	"""
-	classes = [x[1] for x in group]
-	return max(classes, key=classes.count)
+# TODO: define as a class
+class RandomForestClassifier():
+	# A class of problems which are the random forest classifier
+	# trains a classifier given the data, number of trees and number of features
 
-def split(dataset, rfeature, value):
-	"""
-	@param dataset: A dataset of points (x, y) where x is a feature vector 
-					(defaultdict) representation of a song and y is the 
-					genre (0...9) that song belongs to
-	@param rfeature: One selected feature
-	@param value: One value of rfeature
-
-	Splits the dataset into two groups, one with value at 'rfeature' greater
-	or lesser than 'value'
-	"""
-	group_lower = []
-	group_higher = []
-	for datapoint in dataset:
-		if datapoint[0][rfeature] > value:
-			group_higher.append(datapoint)
-		else:
-			group_lower.append(datapoint)
-	return (group_lower, group_higher)
-
-def gini_impurity(groups, class_labels):
-	"""
-	Gini impurity is a measure of how often a randomly chosen element 
-	from the set would be incorrectly labeled if it was randomly labeled 
-	according to the distribution of labels in the subset
-	https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity
-	"""
-	gini_impurity = 0.
-	for label in class_labels:
-		for group in groups:
-			group_size = float(len(group))	# float so quotient is also float
-			if group_size == 0:
-				# there's no impurity that can be measured 
-				continue
-			group_labels = [x[1] for x in group]	# each element of group is (features, label)
-			label_ratio = group_labels.count(label)/group_size
-			gini_impurity += label_ratio*(1 - label_ratio)
-	return gini_impurity
+	def __init__(self, training_data, num_trees, num_features, class_labels):
+		"""
+		@param dataset: A dataset of points (x, y) where x is a feature vector 
+						(defaultdict) representation of a song and y is the 
+						genre (0...9) that song belongs to
+		@param num_features: the number of features to (randomly) consider for 
+						finding the best split. More features takes longer but
+						would likely give better results
+		@param class_labels: The set of all possible output class labels
+		"""
+		self.num_features = num_features
+		self.num_trees = num_trees
+		self.data = training_data
+		self.class_labels = class_labels
 
 
-def find_best_split(dataset, num_features, class_labels):
-	"""
-	@param dataset: A dataset of points (x, y) where x is a feature vector 
-					(defaultdict) representation of a song and y is the 
-					genre (0...9) that song belongs to
-	@param num_features: the number of features to (randomly) consider for 
-					finding the best split. More features takes longer but
-					would likely give better results
-	@param class_labels: The set of all possible output class labels
+	def leaf_node(self, group):
+		"""
+		@param group: A group (subset) of data as a list of (features_dict, class)
+		Create a leaf node class, as the mode of the classes in the group
+		"""
+		classes = [x[1] for x in group]
+		return max(classes, key=classes.count)
 
-	Returns the best split point, i.e. a feature and corresponding value 
-	of one feature out of num_features which splits 'dataset' into the 
-	most homogenous distribution of classes (genres)
-	"""
-	groups = None
-	best_split_feature = None
-	best_split_score = 10000	# arbitrary large number
-	best_split_feature_value = 10000
-	# first, randomly select unique num_features out of all features
-	all_features = set(y for t in dataset for y in t[0].keys())
-	random_feature_set = random.sample(all_features, num_features)
+	def split_into_groups(self, rfeature, value):
+		"""
+		@param dataset: A dataset of points (x, y) where x is a feature vector 
+						(defaultdict) representation of a song and y is the 
+						genre (0...9) that song belongs to
+		@param rfeature: One selected feature
+		@param value: One value of rfeature
 
-	# for each of these randomly sampled features, go through all 
-	# rows in dataset and find the gini index of each split
-	for rfeature in random_feature_set:
-		for datapoint in dataset:
-			split_groups = split(dataset, rfeature, datapoint[0][rfeature])
-			split_purity = gini_impurity(split_groups, class_labels)
-			if split_purity < best_split_score:
-				print 'one candidate found'
-				groups = split_groups
-				best_split_score = split_purity
-				best_split_feature = rfeature
-				best_split_feature_value = datapoint[0][rfeature]
-	return {'groups': groups, 'best_split_feature':best_split_feature, 'best_split_score':best_split_score, 'best_split_feature_value':best_split_feature_value}
+		Splits the dataset into two groups, one with value at 'rfeature' greater
+		or lesser than 'value'. Returns both groups
+		"""
+		group_lower = []
+		group_higher = []
+		for datapoint in self.data:
+			if datapoint[0][rfeature] > value:
+				group_higher.append(datapoint)
+			else:
+				group_lower.append(datapoint)
+		return (group_lower, group_higher)
 
+	def gini_impurity(self, groups):
+		"""
+		Gini impurity is a measure of how often a randomly chosen element 
+		from the set would be incorrectly labeled if it was randomly labeled 
+		according to the distribution of labels in the subset
+		https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity
+		"""
+		gini_impurity = 0.
+		for label in self.class_labels:
+			for group in groups:
+				group_size = float(len(group))	# float so quotient is also float
+				if group_size == 0:
+					# there's no impurity that can be measured 
+					continue
+				group_labels = [x[1] for x in group]	# each element of group is (features, label)
+				label_ratio = group_labels.count(label)/group_size
+				gini_impurity += label_ratio*(1 - label_ratio)
+		return gini_impurity
+
+
+	def find_best_split(self):
+		"""
+		Returns the best split point, i.e. a feature and corresponding value 
+		of one feature out of 'num_features' candidates which splits 'dataset' into the 
+		most homogenous distribution of classes (genres)
+		"""
+		groups = None
+		best_split_feature = None
+		best_split_score = 10000	# arbitrary large number
+		best_split_feature_value = 10000
+		# first, randomly select unique num_features out of all features
+		all_features = set(y for t in self.data for y in t[0].keys())
+		random_feature_set = random.sample(all_features, self.num_features)
+
+		# for each of these randomly sampled features, go through all 
+		# rows in dataset and find the gini index of each split
+		for rfeature in random_feature_set:
+			for datapoint in self.data:
+				split_groups = self.split_into_groups(rfeature, datapoint[0][rfeature])
+				split_purity = self.gini_impurity(split_groups)
+				if split_purity < best_split_score:
+					groups = split_groups
+					best_split_score = split_purity
+					best_split_feature = rfeature
+					best_split_feature_value = datapoint[0][rfeature]
+		return {'groups': groups, 'best_split_feature':best_split_feature, 'best_split_score':best_split_score, 'best_split_feature_value':best_split_feature_value}
+
+	def generate(self):
+		# fit the classifier
+		return self.find_best_split()	# THIS IS ONLY FOR
+
+
+# read in train and test data - to make it easy to debug on python terminal
+def prepare_data(filename):
+	train_data = pandas.read_csv(filename)
+	train_data = train_data.to_records(index=False)		# Now is a list of tuples (lyrics, genre)
+	train_data = [(bag_of_words(l), g) for i,l,g in train_data]	
+	return train_data
 
 # Caluclating performance for baseline
 if __name__ == "__main__":
-	train_data = pandas.read_csv('train.csv')
-	train_data = train_data.to_records(index=False)		# Now is a list of tuples (lyrics, genre)
-	train_data = [(bag_of_words(l), g) for i,l,g in train_data]		# pandas also adds the index of the row, will be removed in this process
+	# pandas also adds the index of the row, will be removed in this process
+	train_data = read_data('train.csv')
 
 	# train stochastic gradient descent on this, get weights
 	genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 	w = stochastic_grad_descent(train_data[:10], genre_labels)
 
 	# Next, find precision recall for all these
-	test_data = pandas.read_csv('test.csv')
-	test_data = test_data.to_records(index=False)		# Now is a list of tuples (lyrics, genre)
-	test_data = [(bag_of_words(l), g) for i,l,g in test_data]	
+	test_data = read_data('test.csv')
 	sgd_performance(w, test_data[:10], genre_labels)
 
 
