@@ -262,12 +262,12 @@ class RandomForestClassifier():
 				# node is not a dict, hence it is a leaf, so return its value
 				return node['right']
 			else:
-				return self.predict(node['right'], x)
+				return self.predict_tree(node['right'], x)
 		else:
 			if not type(node['left']) == type({}):
 				return node['left']
 			else:
-				return self.predict(node['left'], x)
+				return self.predict_tree(node['left'], x)
 
 	def create_random_forest(self):
 		"""
@@ -275,14 +275,14 @@ class RandomForestClassifier():
 		train num_trees number of independent trees. 
 		"""
 		for t in range(self.num_trees):
-			tree = generate_decision_tree()
+			tree = self.generate_decision_tree()
 			self.trees.append(tree)
 
 	def predict(self, x):
 		"""
 		Return prediction on feature vector x using trees. Returns most frequent predicted class.
 		"""
-		predictions = [predict_tree(node, x) for node in self.trees]
+		predictions = [self.predict_tree(node, x) for node in self.trees]
 		return max(predictions, key=predictions.count)
 
 

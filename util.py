@@ -156,7 +156,7 @@ def performance(prediction_function, testdata, class_labels):
 			# happens when tp and fp,fn are 0 due to not enough data being there (hence denominator becomes 0)
 			pretty_print(class_labels[genre_index])
 			print 'NA\t\tNA\t\tNA'
-	print len(testdata)
+
 	print 'Accuracy : ', float(sum(x for x in tp) + sum(x for x in tn))/len(testdata)
 
 # Caluclating performance for baseline

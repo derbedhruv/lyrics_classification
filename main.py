@@ -17,27 +17,15 @@
 """
 ''' Modules to read data from mysql, convert into a form which is pare-able by python, and then train data'''
 import sys
-import MySQLdb
 from nltk.stem.porter import PorterStemmer
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
 from textblob import TextBlob
-import pandas as pd
 import re
-from classifiers import *
-from util import *
+import classifiers
+import util
 
-logistic = LogisticRegression()
-
-valid_cli_args = ['-d', '-f']
+valid_cli_args = ['-d', '-f', '--baseline', '--rfc']
 # We fix upon 10 broad genres
-genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 
 # Format in which to put the songs:
 # genre, url, lyrics
@@ -46,12 +34,13 @@ def get_songs_by_genre(genre_of_interest, db_cursor):
 	@param: genre_of_interest: The genre you are interested in, as a string
 	Send query to db for a particular genre
 	"""
+	import MySQLdb
 	query = "select lyrics from song where genre = '%s'" %genre_of_interest
 	db_cursor.execute(query)
 	data = db_cursor.fetchall()
 	return data
 
-def get_data(genres=genres):
+def get_data(genres=genre_labels):
 	"""
 	@param genres: List of genres (strings) to collect from the db
 	Gets data from the db, arranges it in the form ('lyrics', genre_class), where genre_class is an int representing the genre
@@ -125,113 +114,17 @@ def train_logistic(dataset):
 	return LogisticRegressionClassifier
 
 
+def get_traintest(n=None):
+	"""
+	Returns standard train and test set
+	"""
+	train_data = util.prepare_data('train.csv', num_datapoints=n)
+	test_data = util.prepare_data('test.csv', num_datapoints=n)
+	return (train_data, test_data)
+
 def get_features(dataset):
 	# TODO: Add features/vectorizer to this, modularize code!
 	return None
-
-def train_naiveBayes(dataset):
-	"""
-	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
-	Trains a Naive Bayes classifier and reports how well it performs
-	REF: http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html
-	"""
-	# create an instance of CountVectorizer class which will vectorize the data
-	vectorizer = CountVectorizer(
-	    analyzer = 'word',
-	    tokenizer = feature_parse,
-	    lowercase = True,
-	    stop_words = 'english',
-	    max_features = 3000
-	)
-	# fit bag of words model and convert to relative frequencies instead of absolute counts
-	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
-	data_features = data_features.toarray()
-	tfidf_transformer = TfidfTransformer()
-	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
-
-	# Now we prepare everything for logistic regression
-	X_train, X_test, y_train, y_test  = train_test_split(
-        X_train_tfidf, 
-        dataset['genre'],
-        train_size=0.80
-    )
-
-	# train classifier
-	naiveBayesClassifier = MultinomialNB().fit(X=X_train, y=y_train)
-	# print how well classification was done
-	y_pred = naiveBayesClassifier.predict(X_test)
-	print(classification_report(y_test, y_pred))
-
-	return naiveBayesClassifier 
-
-def trainRandomForest(dataset):
-	"""
-	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
-	Trains a random forest classifier 
-	"""
-	vectorizer = CountVectorizer(
-	    analyzer = 'word',
-	    tokenizer = feature_parse,
-	    lowercase = True,
-	    stop_words = 'english',
-	    max_features = 3000
-	)
-	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
-	data_features = data_features.toarray()
-	tfidf_transformer = TfidfTransformer()
-	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
-
-	# Now we prepare everything for logistic regression
-	X_train, X_test, y_train, y_test  = train_test_split(
-        X_train_tfidf, 
-        dataset['genre'],
-        train_size=0.80
-    )
-	# random forest classifier with 100 trees
-	forest = RandomForestClassifier(n_estimators = 100) 
-	forest = forest.fit(X=X_train, y=y_train)
-
-	y_pred = forest.predict(X_test)
-	print(classification_report(y_test, y_pred))
-
-	return forest 
-
-def trainNeuralNet(dataset):
-	"""
-	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
-	Trains a neural network
-	REF: http://scikit-learn.org/stable/modules/neural_networks_supervised.html
-	# implement from scratch using http://machinelearningmastery.com/implement-random-forest-scratch-python/
-	"""
-	vectorizer = CountVectorizer(
-	    analyzer = 'word',
-	    tokenizer = feature_parse,
-	    lowercase = True,
-	    stop_words = 'english',
-	    max_features = 3000
-	)
-	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
-	data_features = data_features.toarray()
-	tfidf_transformer = TfidfTransformer()
-	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
-
-	# Now we prepare everything for logistic regression
-	X_train, X_test, y_train, y_test  = train_test_split(
-        X_train_tfidf, 
-        dataset['genre'],
-        train_size=0.80
-    )
-
-	# train NN, limited memory BFGS, step size 1e-5
-	nn = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
-	nn = nn.fit(X=X_train, y=y_train)
-
-	y_pred = nn.predict(X_test)
-	print(classification_report(y_test, y_pred))
-
-	return nn
-
-
 
 if __name__ == "__main__":
 	# Check command line args...
@@ -257,4 +150,28 @@ if __name__ == "__main__":
 		# train_naiveBayes(dataset)
 		# trainRandomForest(dataset)		# READ https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm
 		# trainNeuralNet(dataset)
+	if option == '--baseline':
+		print 'training the baseline..'
+		train_data, test_data = get_traintest()
+
+		# train stochastic gradient descent on this, get weights
+		genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+		baseline = classifiers.Baseline(train_data, genre_labels, debug=True)
+		baseline.stochastic_grad_descent()
+		baseline.saveModel('baseline-21Nov16.txt')
+
+		# Next, find precision recall for all these
+		util.performance(baseline.predict, test_data, genre_labels)
+
+	if option == '--rfc':
+		train_data, test_data = get_traintest(n=10)
+		print 'training random forest..'
+		genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+		rfc = classifiers.RandomForestClassifier(train_data, num_trees=1, num_features=10, class_labels=genre_labels, tree_depth=4)
+		rfc.create_random_forest()
+
+		# evaluate performance
+		util.performance(rfc.predict, test_data, genre_labels)
+
+
 		
