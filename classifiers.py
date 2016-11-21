@@ -129,6 +129,7 @@ class RandomForestClassifier():
 		self.data = training_data
 		self.class_labels = class_labels
 		self.maxdepth = tree_depth
+		self.trees = []		# will hold the decision trees that are created
 
 		if not random_seed == None:
 			# in case reproducible results are desired
@@ -198,7 +199,7 @@ class RandomForestClassifier():
 		# first, randomly select unique num_features out of all features
 		all_features = set(y for t in data for y in t[0].keys())
 		# sample num_features features from all_features WITH REPLACEMENT!!
-		random_feature_set = [random.sample(all_features, 1)[0] for i in self.num_features]
+		random_feature_set = [random.sample(all_features, 1)[0] for i in range(self.num_features)]
 
 		# for each of these randomly sampled features, go through all 
 		# rows in dataset and find the gini index of each split
@@ -244,11 +245,11 @@ class RandomForestClassifier():
 		self.get_split(root_node, current_depth=1)
 		return root_node
 
-	def predict(self, node, x):
+	def predict_tree(self, node, x):
 		"""
 		@param root_node: A node of the tree
 		@param x: A feature representation of data
-		Make a prediction with a decision tree. Recursive function.
+		Make a prediction with a single decision tree. Recursive function.
 		Output is a class label
 		"""
 		# check if the value of the feature of x given in node 'f' is greater than 'val'
@@ -257,21 +258,31 @@ class RandomForestClassifier():
 		if x[feature] >= val:
 			# go to the right node
 			# base case: check if node is a leaf node, return val
-			if not type(node['right']) == type({}):
-				# node is not a dict, hence return its value
+			if not type(node['right']) == type({}):	# <--- hack. What's the better way to test if it is a dict?
+				# node is not a dict, hence it is a leaf, so return its value
 				return node['right']
 			else:
 				return self.predict(node['right'], x)
 		else:
 			if not type(node['left']) == type({}):
-				# node is not a dict, hence return its value
 				return node['left']
 			else:
 				return self.predict(node['left'], x)
 
+	def create_random_forest(self):
+		"""
+		create random forest: i.e. multiple decision trees
+		train num_trees number of independent trees. 
+		"""
+		for t in range(self.num_trees):
+			tree = generate_decision_tree()
+			self.trees.append(tree)
 
-
-
-
+	def predict(self, x):
+		"""
+		Return prediction on feature vector x using trees. Returns most frequent predicted class.
+		"""
+		predictions = [predict_tree(node, x) for node in self.trees]
+		return max(predictions, key=predictions.count)
 
 
