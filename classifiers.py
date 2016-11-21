@@ -12,19 +12,23 @@ import math
 class Baseline():
 	# A logistic regression classifier which uses stochastic gradient descent on hinge loss
 
-	def __init__(self, training_data, class_labels, numIters=10, eta=0.01):
-		self.training_set = training_data
-		self.class_labels = class_labels
-		self.weights = weights = [{} for _ in range(len(self.class_labels))]
-		self.numIters = numIters
-		self.eta = eta
-
-	def stochastic_grad_descent(self):
-		'''
+	def __init__(self, training_data, class_labels, numIters=10, eta=0.01, debug=False):
+		"""
 		@param training_set: List of (song, genre)
 		@param genres: list of genres used
 		@param numIters: number of iterations to run, 10 is usually more than enough
 		@param eta: step size for stochastic gradient descent, can play around to find optimal
+		"""
+		self.training_set = training_data
+		self.class_labels = class_labels
+		# weights is a list of dicts, one for each class label
+		self.weights = weights = [{} for _ in range(len(self.class_labels))]
+		self.numIters = numIters
+		self.eta = eta
+		self.debug = debug
+
+	def stochastic_grad_descent(self):
+		'''
 		Given training_set, which is a list of (track_id, mxm_id, vector) tuples. 
 		The 'vector' is a sparse vector containing number of times a word occurs
 		in a song's lyrics.
@@ -37,7 +41,6 @@ class Baseline():
 			"""
 			@param xx: song features
 			@param yy: song label (ground truth)
-			@param weights: the weights of the model (dict of dicts)
 			Computes the hinge loss in 0-1 prediction of xx as yy
 			"""
 			out = 0
@@ -84,22 +87,22 @@ class Baseline():
 				random_song_lyric = random_song[0]
 				random_song_genre = random_song[1]
 				increment_weight(random_song_lyric, random_song_genre)
-			print "iteration = ", i, ", loss = ", lossFunc
+			if self.debug == True:
+				print "iteration = ", i, ", loss = ", lossFunc
 
-	def predict_genre_sgd(self, weights, x):
+	def predict(self, x):
 		"""
-		@param list weights: A list of dict objects with the weights for each genre
 		@param defaultdict x: Feature vector of the song (i.e. occurences of words)
 		This function returns the predicted genre as a string, i.e. one of genre_labels
 		Which is the one which gives the max dotProduct with the corresonding genre's weight
 		"""
-		_, highest_weight_label = max((dotProduct(weight, x), i) for i, weight in enumerate(weights))
+		_, highest_weight_label = max((dotProduct(weight, x), i) for i, weight in enumerate(self.weights))
 		return highest_weight_label
 
-	def sgd_performance(self, weights, testdata):
+	def performance(self, testdata=self.training_set):
 		"""
-		@param list weights: A list of dict objects with the weights for each genre
-		@param testdata: The testdata in the form
+		@param testdata: The testdata in the same form as the training data, i.e. a list of tuples (feature, class)
+		Leave this blank to give the training error itself.
 		"""
 		# find the number of rows for each genre type
 		genre_count = defaultdict(int)
@@ -117,7 +120,7 @@ class Baseline():
 			# get classification for song
 			ground_truth_test_genre = row[1]
 			ground_truth_test_lyric = row[0]
-			predicted_genre = predict_genre_sgd(weights, ground_truth_test_lyric, self.class_labels)
+			predicted_genre = self.predict(ground_truth_test_lyric)
 			# print 'predicted_genre:', predicted_genre, 'genre:', ground_truth_test_genre
 			if predicted_genre == ground_truth_test_genre:
 				# true positive for this genre
@@ -136,15 +139,15 @@ class Baseline():
 		accuracy = defaultdict(float)
 
 		print 'Genre\t\tPrecision\tRecall\tF-1 Score'
-		for genre_index in range(len(genre_labels)):
+		for genre_index in range(len(self.class_labels)):
 			try:
 				precision[genre_index] = tp[genre_index]/(tp[genre_index] + fp[genre_index])
 				recall[genre_index] = tp[genre_index]/(tp[genre_index] + fn[genre_index])
 				f1 = 2*precision[genre_index]*recall[genre_index]/(precision[genre_index] + recall[genre_index])
-				print genre_labels[genre_index], '\t\t', precision[genre_index], '\t\t', recall[genre_index], '\t\t', f1
+				print self.class_labels[genre_index], '\t\t', precision[genre_index], '\t\t', recall[genre_index], '\t\t', f1
 			except ZeroDivisionError:
 				# happens when tp and fp,fn are 0 due to not enough data being there (hence denominator becomes 0)
-				print genre_labels[genre_index], '\t\tNA\t\tNA\t\tNA'
+				print self.class_labels[genre_index], '\t\tNA\t\tNA\t\tNA'
 		print len(testdata)
 		print 'Accuracy : ', (sum(x for x in tp) + sum(x for x in tn))/len(testdata)
 
