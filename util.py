@@ -93,6 +93,57 @@ def generate_homogenous_dataset():
 	Generate a dataset of randomly selected datapoints with equal numbers of each class
 	"""
 
+def performance(prediction_function, testdata, class_labels):
+	"""
+	@param testdata: The testdata in the same form as the training data, i.e. a list of tuples (feature, class)
+	"""
+	# find the number of rows for each genre type
+	genre_count = defaultdict(int)
+	for row in testdata:
+		genre_count[row[1]] += 1
+
+	# Now find the precision and recall for each genre
+	# dicts mapping genres to actual values
+	fp = defaultdict(float)
+	tp = defaultdict(float)
+	tn = defaultdict(float)
+	fn = defaultdict(float)
+
+	for row in testdata:
+		# get classification for song
+		ground_truth_test_genre = row[1]
+		ground_truth_test_lyric = row[0]
+		predicted_genre = prediction_function(ground_truth_test_lyric)
+		# print 'predicted_genre:', predicted_genre, 'genre:', ground_truth_test_genre
+		if predicted_genre == ground_truth_test_genre:
+			# true positive for this genre
+			tp[ground_truth_test_genre] += 1
+			# true negative for all other genres
+			for g in [x for x in range(len(class_labels)) if x != ground_truth_test_genre]:
+				tn[g] += 1
+		else:
+			# wrong prediction, this is a false negative for this genre
+			fn[ground_truth_test_genre] += 1
+			# and it is a false positive for all others
+			for g in [x for x in range(len(class_labels)) if x != ground_truth_test_genre]:
+				fp[g] += 1
+	precision = defaultdict(float)
+	recall = defaultdict(float)
+	accuracy = defaultdict(float)
+
+	print 'Genre\t\tPrecision\tRecall\tF-1 Score'
+	for genre_index in range(len(class_labels)):
+		try:
+			precision[genre_index] = tp[genre_index]/(tp[genre_index] + fp[genre_index])
+			recall[genre_index] = tp[genre_index]/(tp[genre_index] + fn[genre_index])
+			f1 = 2*precision[genre_index]*recall[genre_index]/(precision[genre_index] + recall[genre_index])
+			print class_labels[genre_index], '\t\t', precision[genre_index], '\t\t', recall[genre_index], '\t\t', f1
+		except ZeroDivisionError:
+			# happens when tp and fp,fn are 0 due to not enough data being there (hence denominator becomes 0)
+			print class_labels[genre_index], '\t\tNA\t\tNA\t\tNA'
+	print len(testdata)
+	print 'Accuracy : ', (sum(x for x in tp) + sum(x for x in tn))/len(testdata)
+
 # Caluclating performance for baseline
 if __name__ == "__main__":
 	# pandas also adds the index of the row, will be removed in this process

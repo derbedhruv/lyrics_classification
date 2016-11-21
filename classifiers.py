@@ -99,66 +99,12 @@ class Baseline():
 		_, highest_weight_label = max((dotProduct(weight, x), i) for i, weight in enumerate(self.weights))
 		return highest_weight_label
 
-	def performance(self, testdata=None):
-		"""
-		@param testdata: The testdata in the same form as the training data, i.e. a list of tuples (feature, class)
-		Leave this blank to give the training error itself.
-		"""
-		if testdata == None:
-			# default
-			testdata = self.training_set
-		# find the number of rows for each genre type
-		genre_count = defaultdict(int)
-		for row in testdata:
-			genre_count[row[1]] += 1
-
-		# Now find the precision and recall for each genre
-		# dicts mapping genres to actual values
-		fp = defaultdict(float)
-		tp = defaultdict(float)
-		tn = defaultdict(float)
-		fn = defaultdict(float)
-
-		for row in testdata:
-			# get classification for song
-			ground_truth_test_genre = row[1]
-			ground_truth_test_lyric = row[0]
-			predicted_genre = self.predict(ground_truth_test_lyric)
-			# print 'predicted_genre:', predicted_genre, 'genre:', ground_truth_test_genre
-			if predicted_genre == ground_truth_test_genre:
-				# true positive for this genre
-				tp[ground_truth_test_genre] += 1
-				# true negative for all other genres
-				for g in [x for x in range(len(self.class_labels)) if x != ground_truth_test_genre]:
-					tn[g] += 1
-			else:
-				# wrong prediction, this is a false negative for this genre
-				fn[ground_truth_test_genre] += 1
-				# and it is a false positive for all others
-				for g in [x for x in range(len(self.class_labels)) if x != ground_truth_test_genre]:
-					fp[g] += 1
-		precision = defaultdict(float)
-		recall = defaultdict(float)
-		accuracy = defaultdict(float)
-
-		print 'Genre\t\tPrecision\tRecall\tF-1 Score'
-		for genre_index in range(len(self.class_labels)):
-			try:
-				precision[genre_index] = tp[genre_index]/(tp[genre_index] + fp[genre_index])
-				recall[genre_index] = tp[genre_index]/(tp[genre_index] + fn[genre_index])
-				f1 = 2*precision[genre_index]*recall[genre_index]/(precision[genre_index] + recall[genre_index])
-				print self.class_labels[genre_index], '\t\t', precision[genre_index], '\t\t', recall[genre_index], '\t\t', f1
-			except ZeroDivisionError:
-				# happens when tp and fp,fn are 0 due to not enough data being there (hence denominator becomes 0)
-				print self.class_labels[genre_index], '\t\tNA\t\tNA\t\tNA'
-		print len(testdata)
-		print 'Accuracy : ', (sum(x for x in tp) + sum(x for x in tn))/len(testdata)
-
 
 # implementing a random forest classifier
 class RandomForestClassifier():
 	# A class of problems which are the random forest classifier
 	# trains a classifier given the data, number of trees and number of features
+	# REF: https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm
 
 	def __init__(self, training_data, num_trees, num_features, class_labels, tree_depth, random_seed=None):
 		"""
@@ -245,7 +191,8 @@ class RandomForestClassifier():
 		best_split_feature_value = 10000
 		# first, randomly select unique num_features out of all features
 		all_features = set(y for t in data for y in t[0].keys())
-		random_feature_set = random.sample(all_features, self.num_features)
+		# sample num_features features from all_features WITH REPLACEMENT!!
+		random_feature_set = [random.sample(all_features, 1)[0] for i in self.num_features]
 
 		# for each of these randomly sampled features, go through all 
 		# rows in dataset and find the gini index of each split
