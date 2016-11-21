@@ -208,6 +208,14 @@ def sgd_performance(weights, testdata, genre_labels):
 
 
 # implementing a random forest classifier
+def leaf_node(group):
+	"""
+	@param group: A group (subset) of data as a list of (features_dict, class)
+	Create a leaf node class, as the mode of the classes in the group
+	"""
+	classes = [x[1] for x in group]
+	return max(classes, key=classes.count)
+
 def split(dataset, rfeature, value):
 	"""
 	@param dataset: A dataset of points (x, y) where x is a feature vector 
@@ -222,7 +230,7 @@ def split(dataset, rfeature, value):
 	group_lower = []
 	group_higher = []
 	for datapoint in dataset:
-		if datapoint[rfeature] > value:
+		if datapoint[0][rfeature] > value:
 			group_higher.append(datapoint)
 		else:
 			group_lower.append(datapoint)
@@ -245,6 +253,7 @@ def gini_impurity(groups, class_labels):
 			group_labels = [x[1] for x in group]	# each element of group is (features, label)
 			label_ratio = group_labels.count(label)/group_size
 			gini_impurity += label_ratio*(1 - label_ratio)
+	return gini_impurity
 
 
 def find_best_split(dataset, num_features, class_labels):
@@ -266,20 +275,21 @@ def find_best_split(dataset, num_features, class_labels):
 	best_split_score = 10000	# arbitrary large number
 	best_split_feature_value = 10000
 	# first, randomly select unique num_features out of all features
-	all_features = set(y for t in train_data for y in t[0].keys())
+	all_features = set(y for t in dataset for y in t[0].keys())
 	random_feature_set = random.sample(all_features, num_features)
 
 	# for each of these randomly sampled features, go through all 
 	# rows in dataset and find the gini index of each split
 	for rfeature in random_feature_set:
 		for datapoint in dataset:
-			split_groups = split(dataset, rfeature, datapoint[rfeature])
+			split_groups = split(dataset, rfeature, datapoint[0][rfeature])
 			split_purity = gini_impurity(split_groups, class_labels)
 			if split_purity < best_split_score:
+				print 'one candidate found'
 				groups = split_groups
 				best_split_score = split_purity
 				best_split_feature = rfeature
-				best_split_feature_value = datapoint[rfeature]
+				best_split_feature_value = datapoint[0][rfeature]
 	return {'groups': groups, 'best_split_feature':best_split_feature, 'best_split_score':best_split_score, 'best_split_feature_value':best_split_feature_value}
 
 
