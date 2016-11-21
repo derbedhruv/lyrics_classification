@@ -88,6 +88,11 @@ def prepare_data(filename, num_datapoints=None, featureExtractor=bag_of_words):
 		train_data = train_data[:num_datapoints]
 	return train_data
 
+def generate_homogenous_dataset():
+	"""
+	Generate a dataset of randomly selected datapoints with equal numbers of each class
+	"""
+
 # Caluclating performance for baseline
 if __name__ == "__main__":
 	# pandas also adds the index of the row, will be removed in this process

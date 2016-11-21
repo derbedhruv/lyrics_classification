@@ -258,7 +258,8 @@ class RandomForestClassifier():
 					best_split_score = split_purity
 					best_split_feature = rfeature
 					best_split_feature_value = datapoint[0][rfeature]
-		return {'groups': groups, 'best_split_feature':best_split_feature, 'best_split_score':best_split_score, 'best_split_feature_value':best_split_feature_value}
+		#return {'groups': groups, 'best_split_feature':best_split_feature, 'best_split_score':best_split_score, 'best_split_feature_value':best_split_feature_value}
+		return {'groups': groups, 'f':best_split_feature, 'val':best_split_feature_value}
 
 	def get_split(self, node, current_depth):
 		# recursive function
@@ -289,5 +290,35 @@ class RandomForestClassifier():
 		root_node = self.find_best_split(self.data)
 		self.get_split(root_node, current_depth=1)
 		return root_node
+
+	def predict(self, node, x):
+		"""
+		@param root_node: A node of the tree
+		@param x: A feature representation of data
+		Make a prediction with a decision tree. Recursive function.
+		Output is a class label
+		"""
+		# check if the value of the feature of x given in node 'f' is greater than 'val'
+		feature = node['f']
+		val = node['val']
+		if x[feature] >= val:
+			# go to the right node
+			# base case: check if node is a leaf node, return val
+			if not type(node['right']) == type({}):
+				# node is not a dict, hence return its value
+				return node['right']
+			else:
+				return self.predict(node['right'], x)
+		else:
+			if not type(node['left']) == type({}):
+				# node is not a dict, hence return its value
+				return node['left']
+			else:
+				return self.predict(node['left'], x)
+
+
+
+
+
 
 
