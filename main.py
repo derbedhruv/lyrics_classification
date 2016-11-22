@@ -164,14 +164,14 @@ if __name__ == "__main__":
 		util.performance(baseline.predict, test_data, genre_labels)
 
 	if option == '--rfc':
-		train_data, test_data = get_traintest(n=10)
+		train_data, test_data = get_traintest(n=100)
 		print 'training random forest..'
 		genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 		rfc = classifiers.RandomForestClassifier(train_data, num_trees=1, num_features=10, class_labels=genre_labels, tree_depth=4)
 		rfc.create_random_forest()
 
 		# evaluate performance
-		util.performance(rfc.predict, test_data, genre_labels)
+		util.performance(rfc.predict, train_data, genre_labels)
 
 
 		

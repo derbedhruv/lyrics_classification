@@ -124,9 +124,9 @@ def performance(prediction_function, testdata, class_labels):
 		else:
 			# wrong prediction, this is a false negative for this genre
 			fn[ground_truth_test_genre] += 1
-			# and it is a false positive for all others
-			for g in [x for x in range(len(class_labels)) if x != ground_truth_test_genre]:
-				fp[g] += 1
+			# and it is a false positive for the one predicted
+			# for g in [x for x in range(len(class_labels)) if x != ground_truth_test_genre]:
+			fp[predicted_genre] += 1
 	precision = defaultdict(float)
 	recall = defaultdict(float)
 	accuracy = defaultdict(float)
