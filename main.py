@@ -35,7 +35,7 @@ logistic = LogisticRegression()
 
 # command line parameter variables
 valid_cli_args = ['-f', '-m']
-valid_models = []
+valid_models = ['log']
 
 # We fix upon 10 broad genres
 genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
@@ -61,7 +61,7 @@ def feature_parse(data, option='bow'):
 		raise Exception('3-gram has not been implemented yet!')
 	return tokens
 
-def train_logistic(dataset):
+def train_logistic(X_train, y_train):
 	"""
 	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
 	trains a logistic regression classifier and reports how well it performs on a cross-validation dataset.
@@ -98,6 +98,7 @@ def get_features(dataset, max_features=3000, tokenizer=feature_parse):
 	# print vectorizer.get_feature_names()
 
 	# tf-idf transformation
+	# TODO: Put option for having or not having this
 	tfidf_transformer = TfidfTransformer()
 	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
 
@@ -224,15 +225,15 @@ def run_model(cl):
 	Second one has to be one of 
 	"""
 	try:
-		cl1 = sys.argv[cl]
-		cl2 = sys.argv[cl+1]
+		cl1 = str(sys.argv[cl])
+		cl2 = str(sys.argv[cl+1])
 	except IndexError:
 		print 'Please choose a model!'
 		command_line_syntax()
 		sys.exit(0)
 
 	assert cl1 == '-m', 'You must enter -m to choose the model!'
-	assert cs2 in valid_models, command_line_syntax()
+	assert cl2 in valid_models, command_line_syntax()
 
 	# First read in the data
 	with open(filename, 'r') as f:
@@ -242,13 +243,18 @@ def run_model(cl):
 	X_train, y_train, X_test, y_test, vectorizer = get_features(dataset)
 
 	# Then run models based on what the argument says
+	if cl2 == 'log':
+		logC = train_logistic(X_train, y_train)
 
-def command_line_syntax():
+
+def command_line_syntax(custom_starting_message=None):
 	"""
 	Tell user the correct syntax to use, then exit.
 	"""
+	if custom_starting_message:
+		print custom_starting_message
 	print 'Syntax of the command is:\npython main.py -f (optional)<file-to-get-data> -m <model-name>'
-	print 'Options are\n\trfc - Random Forest Classifier\n\tbaseline - the baseline implementation\n\tnn - Neural Networks'
+	print 'Options are\n\trfc - Random Forest Classifier\n\tbaseline - the baseline implementation\n\tnn - Neural Networks\n\tlog - Logstic Regression'
 	print 'Quitting...'
 	sys.exit(0)	
 
@@ -257,18 +263,16 @@ if __name__ == "__main__":
 	# Check command line args...
 	try:
 		option = str(sys.argv[1])
-		assert option in valid_cli_args, '%s is not a valid argument!'%option
+		assert option in valid_cli_args, command_line_syntax('%s is not a valid argument!'%option)
 	except IndexError:
-		print 'You have not entered any arguments!'
-		command_line_syntax()
+		command_line_syntax('You have not entered any arguments!')
 
 	if option == '-f':
 		try:
 			filename = str(sys.argv[2])
 			print 'Will grab data from %s..'%filename,
 		except IndexError:
-			print 'ERROR: Please enter a file location to get the data from!'
-			command_line_syntax()
+			command_line_syntax('ERROR: Please enter a file location to get the data from!')
 			sys.exit(0)
 		# Read data from the CSV file and call the classifier to train on it
 		# dataset = pd.read_csv(filename)
@@ -278,14 +282,13 @@ if __name__ == "__main__":
 		try:
 			run_model(3)
 		except IndexError:
-			print 'Please choose a model! Options are\nrfc - Random Forest Classifier\nbaseline - the baseline implementation\nnn - Neural Networks'
+			command_line_syntax('Please choose a model!')
 			sys.exit(0)
 	elif option == '-m':
 		# first read default data
 		run_model(1)
 
-	print 'No valid command line options given!'
-	command_line_syntax()
+	command_line_syntax('No valid command line options given!')
 	# train_logistic(dataset)
 	# train_naiveBayes(dataset)
 	# trainRandomForest(dataset)		# READ https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm
