@@ -61,7 +61,7 @@ def feature_parse(data, option='bow'):
 		raise Exception('3-gram has not been implemented yet!')
 	return tokens
 
-def train_logistic(X_train, y_train):
+def train_logistic(X_train, y_train, X_test, y_test):
 	"""
 	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
 	trains a logistic regression classifier and reports how well it performs on a cross-validation dataset.
@@ -235,6 +235,7 @@ def run_model(cl):
 	assert cl2 in valid_models, command_line_syntax('You have chosen an invalid model!')
 
 	# First read in the data
+	print 'Reading in data...'
 	with open(filename, 'r') as f:
 		dataset = pd.read_csv(f)
 
@@ -243,6 +244,7 @@ def run_model(cl):
 
 	# Then run models based on what the argument says
 	if cl2 == 'log':
+		print 'Training logistic regression model...'
 		logC = train_logistic(X_train, y_train)
 
 
