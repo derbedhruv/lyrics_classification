@@ -37,17 +37,6 @@ valid_cli_args = ['-d', '-f']
 # We fix upon 10 broad genres
 genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 
-# Format in which to put the songs:
-# genre, url, lyrics
-def get_songs_by_genre(genre_of_interest, db_cursor):
-	"""
-	@param: genre_of_interest: The genre you are interested in, as a string
-	Send query to db for a particular genre
-	"""
-	query = "select lyrics from song where genre = '%s'" %genre_of_interest
-	db_cursor.execute(query)
-	data = db_cursor.fetchall()
-	return data
 
 def get_data(genres=genres):
 	"""
