@@ -71,9 +71,9 @@ if __name__ == "__main__":
 	# Now we have a list of lists containing filtered strings. We need to save them in a form that is easily readable. 
 	# Pandas are a good choice
 	print 'Saving songs to csv file...',
-	final_songs = pd.DataFrame(songs_master_list)
+	final_songs = pd.DataFrame(songs_master_list, columns = ['lyrics', 'genre'])
 	f = open('songData-Nov22.csv', 'w')
-	final_songs.to_csv(f)
+	final_songs.to_csv(f, index=False)
 	f.close()
 	print 'completed! Enjoy your new dataset.'
 
