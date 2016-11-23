@@ -35,7 +35,7 @@ logistic = LogisticRegression()
 
 # command line parameter variables
 valid_cli_args = ['-f', '-m']
-valid_models = ['log']
+valid_models = ['log', 'rfc']
 
 # We fix upon 10 broad genres
 genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
@@ -100,11 +100,12 @@ def get_features(dataset, max_features=3000, tokenizer=feature_parse):
 	# tf-idf transformation
 	# TODO: Put option for having or not having this
 	tfidf_transformer = TfidfTransformer()
-	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
+	X_tfidf = tfidf_transformer.fit_transform(data_features)
 
 	# Now we prepare everything for logistic regression
 	X_train, X_test, y_train, y_test  = train_test_split(
-        data_features, 
+        # data_features, 
+	X_tfidf,
         dataset['genre'],
         train_size=0.80
     )
@@ -151,30 +152,12 @@ def train_naiveBayes(dataset):
 
 	return naiveBayesClassifier 
 
-def trainRandomForest(dataset):
+def trainRandomForest(X_train, y_train, X_test, y_test):
 	"""
 	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
 	Trains a random forest classifier 
 	https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm
 	"""
-	vectorizer = CountVectorizer(
-	    analyzer = 'word',
-	    tokenizer = feature_parse,
-	    lowercase = True,
-	    stop_words = 'english',
-	    max_features = 3000
-	)
-	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
-	data_features = data_features.toarray()
-	tfidf_transformer = TfidfTransformer()
-	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
-
-	# Now we prepare everything for logistic regression
-	X_train, X_test, y_train, y_test  = train_test_split(
-        X_train_tfidf, 
-        dataset['genre'],
-        train_size=0.80
-    )
 	# random forest classifier with 100 trees
 	forest = RandomForestClassifier(n_estimators = 100) 
 	forest = forest.fit(X=X_train, y=y_train)
@@ -246,7 +229,9 @@ def run_model(cl):
 	if cl2 == 'log':
 		print 'Training logistic regression model...'
 		logC = train_logistic(X_train, y_train, X_test, y_test)
-
+	elif cl2 == 'rfc':
+		print 'Training random forest classifier...'
+		logRFC = trainRandomForest(X_train, y_train, X_test, y_test)
 
 def command_line_syntax(custom_starting_message=None):
 	"""
