@@ -245,7 +245,7 @@ def run_model(cl):
 	# Then run models based on what the argument says
 	if cl2 == 'log':
 		print 'Training logistic regression model...'
-		logC = train_logistic(X_train, y_train)
+		logC = train_logistic(X_train, y_train, X_test, y_test)
 
 
 def command_line_syntax(custom_starting_message=None):
@@ -284,7 +284,7 @@ if __name__ == "__main__":
 	elif option == '-m':
 		# first read default data
 		run_model(1)
-
+		sys.exit(0)
 	command_line_syntax('No valid command line options given!')
 	# train_logistic(dataset)
 	# train_naiveBayes(dataset)
