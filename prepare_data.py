@@ -35,7 +35,7 @@ def get_data(genres=genres_list):
 		data = get_songs_by_genre(genre, db_cursor)
 		for song in data:
 			# song is a singleton tuple (since the db query returns only tuples), so need to extract
-			dataset.append([song[0], label])
+			dataset.append([song[0], label])	# <----- REMEMBER THAT THE GENRE IS THE LABEL (0..9), NOT THE STRING!
 	# convert to pandas
 	dataset = pd.DataFrame.from_records(dataset, columns=['lyrics', 'genre'])
 	return dataset
@@ -75,6 +75,8 @@ if __name__ == "__main__":
 	f = open('songData-Nov22.csv', 'w')
 	final_songs.to_csv(f, index=False)
 	f.close()
-	print 'completed! Enjoy your new dataset.'
+	print 'completed! Enjoy your new dataset. Number of songs per genre:'
+	for g in songs_by_genre.keys():
+		print g, ":", songs_by_genre[g]
 
 

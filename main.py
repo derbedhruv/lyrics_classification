@@ -33,37 +33,22 @@ import re
 
 logistic = LogisticRegression()
 
-valid_cli_args = ['-d', '-f']
+# command line parameter variables
+valid_cli_args = ['-f', '-m']
+valid_models = []
+
 # We fix upon 10 broad genres
 genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 
+# default file from which to read data
+filename = 'songData-Nov22.csv'
 
-def get_data(genres=genres):
-	"""
-	@param genres: List of genres (strings) to collect from the db
-	Gets data from the db, arranges it in the form ('lyrics', genre_class), where genre_class is an int representing the genre
-	It correspondds to the index in the genres list. Returns a Panda object (dataframe).
-	"""
-	print 'establishing connection to db...',
-	db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
-	db_cursor = db.cursor()
-	print 'done!'
-	dataset = []
-	for label, genre in enumerate(genres):
-		data = get_songs_by_genre(genre, db_cursor)
-		for song in data:
-			# song is a singleton tuple (since the db query returns only tuples), so need to extract
-			dataset.append([song[0], label])
-	# convert to pandas
-	dataset = pd.DataFrame.from_records(dataset, columns=['lyrics', 'genre'])
-	return dataset
 
 # convert to a format that the algo can use
 # REF: https://www.codementor.io/python/tutorial/data-science-python-r-sentiment-classification-machine-learning
 def feature_parse(data, option='bow'):
 	"""
 	The data is a tuple of tuples (lyrics, genre)
-	We want to clean this up and make it into a numpy array
 	"""
 	# perform basic stuff, like stemming
 	# stemmer = PorterStemmer()
@@ -83,25 +68,7 @@ def train_logistic(dataset):
 	returns the fitted classifier object (sklearn.linear_model.LogisticRegression).
 	REF: https://www.codementor.io/python/tutorial/data-science-python-r-sentiment-classification-machine-learning
 	"""
-	# create an instance of CountVectorizer class which will vectorize the data
-	vectorizer = CountVectorizer(
-	    analyzer = 'word',
-	    tokenizer = feature_parse,
-	    lowercase = True,
-	    stop_words = 'english',
-	    max_features = 3000		# can go upto 5000 on corn.stanford.edu
-	)
-	# Fit the data
-	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
-	data_features = data_features.toarray()
-	# print vectorizer.get_feature_names()
-
-	# Now we prepare everything for logistic regression
-	X_train, X_test, y_train, y_test  = train_test_split(
-        data_features, 
-        dataset['genre'],
-        train_size=0.80
-    )
+	
 	LogisticRegressionClassifier = LogisticRegression()
 	LogisticRegressionClassifier = LogisticRegressionClassifier.fit(X=X_train, y=y_train)
 
@@ -112,9 +79,40 @@ def train_logistic(dataset):
 	return LogisticRegressionClassifier
 
 
-def get_features(dataset):
-	# TODO: Add features/vectorizer to this, modularize code!
-	return None
+def get_features(dataset, max_features=3000, tokenizer=feature_parse):
+	"""
+	Choose features and the way that features are created
+	Create train test split from dataset after sparse feature representations are created
+	"""
+	# create an instance of CountVectorizer class which will vectorize the data
+	vectorizer = CountVectorizer(
+	    analyzer = 'word',
+	    tokenizer = tokenizer,
+	    lowercase = True,
+	    stop_words = 'english',
+	    max_features = max_features		# can go upto 5000 on corn.stanford.edu
+	)
+	# Fit the data
+	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
+	data_features = data_features.toarray()
+	# print vectorizer.get_feature_names()
+
+	# tf-idf transformation
+	tfidf_transformer = TfidfTransformer()
+	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
+
+	# Now we prepare everything for logistic regression
+	X_train, X_test, y_train, y_test  = train_test_split(
+        data_features, 
+        dataset['genre'],
+        train_size=0.80
+    )
+
+    # Can extract a lot of features from the vectorizer
+    # vectorizer.vocabulary_ gives the words used in the selected sparse feature matrix (http://stackoverflow.com/questions/22920801/can-i-use-countvectorizer-in-scikit-learn-to-count-frequency-of-documents-that-w)
+    # 
+
+    return (X_train, y_train, X_test, y_test, vectorizer)
 
 def train_naiveBayes(dataset):
 	"""
@@ -155,6 +153,7 @@ def trainRandomForest(dataset):
 	"""
 	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
 	Trains a random forest classifier 
+	https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm
 	"""
 	vectorizer = CountVectorizer(
 	    analyzer = 'word',
@@ -218,28 +217,70 @@ def trainNeuralNet(dataset):
 	return nn
 
 
+def run_model(cl):
+	"""
+	@param cl: The command line index from which to consider the model command
+	Second one has to be one of 
+	"""
+	try:
+		cl1 = sys.argv[cl]
+		cl2 = sys.argv[cl+1]
+	except IndexError:
+		print 'Please choose a model! Options are\nrfc - Random Forest Classifier\nbaseline - the baseline implementation\nnn - Neural Networks'
+		sys.exit(0)
+
+	assert cl1 == '-m', 'You must enter -m to choose the model!'
+	assert cs2 in valid_models, command_line_syntax()
+
+	# Run models based on what the argument says
+
+def command_line_syntax():
+	"""
+	Tell user the correct syntax to use, then exit.
+	"""
+	print 'Syntax of the command is:\npython main.py -f (optional)<file-to-get-data> -m <model-name>'
+	print 'Choose models from - {rfc, baseline, nn}'
+	print 'Quitting...'
+	sys.exit(0)	
+
 
 if __name__ == "__main__":
 	# Check command line args...
-	option = str(sys.argv[1])
-	assert option in valid_cli_args, '%s is not a valid argument!'%option
-	if option == '-d':
-		print 'Will grab data from MYSQL database..'
-		# NOTE: Make sure mysql server has been started! 
-		# > mysql.server start
-		dataset = get_data(genres=['Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk'])
-		train_logistic(dataset)
+	try:
+		option = str(sys.argv[1])
+		assert option in valid_cli_args, '%s is not a valid argument!'%option
+	except IndexError:
+		print 'You have not entered any arguments!'
+		command_line_syntax()
+
 	if option == '-f':
 		try:
 			filename = str(sys.argv[2])
 			print 'Will grab data from %s..'%filename,
 		except IndexError:
-			print 'ERROR: Please enter a file location to get the data from! Command is -f </path/to/file>. Quitting...'
+			print 'ERROR: Please enter a file location to get the data from!'
+			command_line_syntax()
 			sys.exit(0)
 		# Read data from the CSV file and call the classifier to train on it
-		dataset = pd.read_csv(filename)
-		print 'read complete. Training...'
-		# train_logistic(dataset)
-		# train_naiveBayes(dataset)
-		# trainRandomForest(dataset)		# READ https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm
-		trainNeuralNet(dataset)
+		# dataset = pd.read_csv(filename)
+		print 'read complete.'
+
+		# Now look for next argument for the type of classifier to use
+		try:
+			run_model(3)
+		except IndexError:
+			print 'Please choose a model! Options are\nrfc - Random Forest Classifier\nbaseline - the baseline implementation\nnn - Neural Networks'
+			sys.exit(0)
+	elif option == '-m':
+		# first read default data
+		run_model(1)
+
+	print 'No valid command line options given!'
+	command_line_syntax()
+	# train_logistic(dataset)
+	# train_naiveBayes(dataset)
+	# trainRandomForest(dataset)		# READ https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm
+	# trainNeuralNet(dataset)
+
+
+
