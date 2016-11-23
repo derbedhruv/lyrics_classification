@@ -280,11 +280,7 @@ if __name__ == "__main__":
 		print 'read complete.'
 
 		# Now look for next argument for the type of classifier to use
-		try:
-			run_model(3)
-		except IndexError:
-			command_line_syntax('Please choose a model!')
-			sys.exit(0)
+		run_model(3)
 	elif option == '-m':
 		# first read default data
 		run_model(1)
