@@ -228,12 +228,11 @@ def run_model(cl):
 		cl1 = str(sys.argv[cl])
 		cl2 = str(sys.argv[cl+1])
 	except IndexError:
-		print 'Please choose a model!'
-		command_line_syntax()
+		command_line_syntax('Please choose a model!')
 		sys.exit(0)
 
-	assert cl1 == '-m', 'You must enter -m to choose the model!'
-	assert cl2 in valid_models, command_line_syntax()
+	assert cl1 == '-m', command_line_syntax('You must enter -m to choose the model!')
+	assert cl2 in valid_models, command_line_syntax('You have chosen an invalid model!')
 
 	# First read in the data
 	with open(filename, 'r') as f:
