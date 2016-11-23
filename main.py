@@ -112,7 +112,8 @@ def get_features(dataset, max_features=3000, tokenizer=feature_parse):
     # vectorizer.vocabulary_ gives the words used in the selected sparse feature matrix (http://stackoverflow.com/questions/22920801/can-i-use-countvectorizer-in-scikit-learn-to-count-frequency-of-documents-that-w)
     # 
 
-    return (X_train, y_train, X_test, y_test, vectorizer)
+	return (X_train, y_train, X_test, y_test, vectorizer)
+
 
 def train_naiveBayes(dataset):
 	"""
@@ -226,20 +227,28 @@ def run_model(cl):
 		cl1 = sys.argv[cl]
 		cl2 = sys.argv[cl+1]
 	except IndexError:
-		print 'Please choose a model! Options are\nrfc - Random Forest Classifier\nbaseline - the baseline implementation\nnn - Neural Networks'
+		print 'Please choose a model!'
+		command_line_syntax()
 		sys.exit(0)
 
 	assert cl1 == '-m', 'You must enter -m to choose the model!'
 	assert cs2 in valid_models, command_line_syntax()
 
-	# Run models based on what the argument says
+	# First read in the data
+	with open(filename, 'r') as f:
+		dataset = pd.read_csv(f)
+
+	# Then create the features
+	X_train, y_train, X_test, y_test, vectorizer = get_features(dataset)
+
+	# Then run models based on what the argument says
 
 def command_line_syntax():
 	"""
 	Tell user the correct syntax to use, then exit.
 	"""
 	print 'Syntax of the command is:\npython main.py -f (optional)<file-to-get-data> -m <model-name>'
-	print 'Choose models from - {rfc, baseline, nn}'
+	print 'Options are\n\trfc - Random Forest Classifier\n\tbaseline - the baseline implementation\n\tnn - Neural Networks'
 	print 'Quitting...'
 	sys.exit(0)	
 
