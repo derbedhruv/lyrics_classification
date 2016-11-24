@@ -1,7 +1,26 @@
 <doctype !html>
 <head>
-  <title>CS 221 Mini Project - Autumn 2016 - Stanford University - Dhruv Joshi </title>
+  <title>CS 221 Project - Autumn 2016 - Stanford University - Dhruv Joshi </title>
+  <link rel='stylesheet' type='text/css' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'>
 </head>
 <body>
-  <h1>Genre-wise classification of songs using lyrics</h1>
+  <h1>Lyrics-based classification of Songs</h1>
+  <form id="lyrics_form">
+  	<input type="text" name="lyrix" id="lyrix">
+  	<input class="submit" value="Send" type="submit">
+  </form>
 </body>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"
+			  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+			  		crossorigin="anonymous"></script>
+<script>
+$("#lyrics_form").submit(function (e){
+	e.preventDefault();
+	processLyrics();
+})
+
+function processLyrics() {
+	console.log("hello" + $("#lyrix").val());
+}
+
+</script>

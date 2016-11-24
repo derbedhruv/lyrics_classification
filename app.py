@@ -3,9 +3,15 @@ from flask import Flask, request, Response
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET'])
+@app.route('/')
 def index():
   return Response(open('index.html').read(), mimetype="text/html")
+
+@app.route('/', methods=['POST'])
+def process_lyrics():
+	lyrics = request.form['lyrix']
+	print lyrics
+	return 'OK'
 
 if __name__ == "__main__":
   app.run()
