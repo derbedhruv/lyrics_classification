@@ -7,10 +7,10 @@ app = Flask(__name__)
 def index():
   return Response(open('index.html').read(), mimetype="text/html")
 
-@app.route('/', methods=['POST'])
+@app.route('/process-lyrics', methods=['GET', 'POST'])
 def process_lyrics():
-	lyrics = request.form['lyrix']
-	print lyrics
+	# lyrics = request.form['lyrix']
+	# print lyrics
 	return 'OK'
 
 if __name__ == "__main__":
