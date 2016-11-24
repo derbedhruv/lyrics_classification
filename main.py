@@ -35,7 +35,7 @@ logistic = LogisticRegression()
 
 # command line parameter variables
 valid_cli_args = ['-f', '-m']
-valid_models = ['log', 'rfc']
+valid_models = ['log', 'rfc', 'nn']
 
 # We fix upon 10 broad genres
 genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
@@ -88,7 +88,7 @@ def get_features(dataset, max_features=3000, tokenizer=feature_parse):
 	vectorizer = CountVectorizer(
 	    analyzer = 'word',
 	    tokenizer = tokenizer,
-	    lowercase = True,
+	    lowercase = False,
 	    stop_words = 'english',
 	    max_features = max_features		# can go upto 5000 on corn.stanford.edu
 	)
@@ -99,13 +99,13 @@ def get_features(dataset, max_features=3000, tokenizer=feature_parse):
 
 	# tf-idf transformation
 	# TODO: Put option for having or not having this
-	tfidf_transformer = TfidfTransformer()
-	X_tfidf = tfidf_transformer.fit_transform(data_features)
+	# tfidf_transformer = TfidfTransformer()
+	# X_tfidf = tfidf_transformer.fit_transform(data_features)
 
 	# Now we prepare everything for logistic regression
 	X_train, X_test, y_train, y_test  = train_test_split(
-        # data_features, 
-	X_tfidf,
+        data_features, 
+	# X_tfidf,
         dataset['genre'],
         train_size=0.80
     )
@@ -167,31 +167,12 @@ def trainRandomForest(X_train, y_train, X_test, y_test):
 
 	return forest 
 
-def trainNeuralNet(dataset):
+def trainNeuralNet(X_train, y_train, X_test, y_test):
 	"""
 	@param dataset: DataFrame containing ('lyrics', genre) where genre is an integer class 0..N 
 	Trains a neural network
 	REF: http://scikit-learn.org/stable/modules/neural_networks_supervised.html
 	"""
-	vectorizer = CountVectorizer(
-	    analyzer = 'word',
-	    tokenizer = feature_parse,
-	    lowercase = True,
-	    stop_words = 'english',
-	    max_features = 3000
-	)
-	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
-	data_features = data_features.toarray()
-	tfidf_transformer = TfidfTransformer()
-	X_train_tfidf = tfidf_transformer.fit_transform(data_features)
-
-	# Now we prepare everything for logistic regression
-	X_train, X_test, y_train, y_test  = train_test_split(
-        X_train_tfidf, 
-        dataset['genre'],
-        train_size=0.80
-    )
-
 	# train NN, limited memory BFGS, step size 1e-5
 	nn = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
 	nn = nn.fit(X=X_train, y=y_train)
@@ -223,7 +204,7 @@ def run_model(cl):
 		dataset = pd.read_csv(f)
 
 	# Then create the features
-	X_train, y_train, X_test, y_test, vectorizer = get_features(dataset)
+	X_train, y_train, X_test, y_test, vectorizer = get_features(dataset, max_features=5000)
 
 	# Then run models based on what the argument says
 	if cl2 == 'log':
@@ -232,6 +213,9 @@ def run_model(cl):
 	elif cl2 == 'rfc':
 		print 'Training random forest classifier...'
 		logRFC = trainRandomForest(X_train, y_train, X_test, y_test)
+	elif cl2 == 'nn':
+		print 'Training Neural Net...'
+		logRFC = trainNeuralNet(X_train, y_train, X_test, y_test)
 
 def command_line_syntax(custom_starting_message=None):
 	"""
