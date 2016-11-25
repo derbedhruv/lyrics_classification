@@ -90,7 +90,7 @@ def save100MostComPerGenre():
 	# Then call the NmostCom function
 	from main import filename
 	dataset = pandas.read_csv(filename)
-	mostCommon200Words = NmostCom(dataset, 400)
+	mostCommon200Words = NmostCom(dataset, 200)
 
 	# Then remove common words from all
 	# convert to lists
