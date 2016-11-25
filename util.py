@@ -55,6 +55,24 @@ def sentence_stats(song_string):
 	output = [stats[x] for x in stats.keys()]
 	return output
 
+# return the N most commonly used words in a group of songs entered
+def NmostCom(dataset, N):
+	# input is a dataframe with 'lyrics' and 'genre' as headers
+	# Returns a defaultdict, with avg no of times word appears in each song in the dataset
+	import operator
+	from stop_words import get_stop_words
+	stop_words = get_stop_words('en')
+
+	L = len(dataset)
+	words = defaultdict(float)
+	for song in dataset['lyrics'].tolist():
+		considered_words = set(song.split()) - set(stop_words)
+		for w in considered_words:
+			words[w] += 1./L
+	# sorting will create a new list of tuples
+	sorted_list = sorted(words.items(), key=operator.itemgetter(1))[-N:]
+	return sorted_list
+
 # type/token ratio for different genres
 
 # bag of words conversion
