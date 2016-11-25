@@ -40,17 +40,24 @@ def logistic(weights, x):
 	"""
 	return 1./(1 + math.exp(-dotProduct(weights, x)))
 
-# 1. sentence count
-def sentence_count(dataset):
-	genre = {}
-	for i, song in enumerate(dataset['lyrics']):
-	  g = song[1]
-	  num_verses = lyric.count('\n\n')
-	  num_sentences = lyric.count('\n') - num_verses + 1
+# sentence count
+def sentence_stats(song_string):
+	# input a string representation of a song's lyrics
+	stats = defaultdict(int)
+	stats['num_verses'] = song_string.count('\n\n')
+	sentences = song_string.split('\n')
+	stats['num_sentences'] = len(sentences) - stats['num_verses'] + 1
+	stats['avg_words_per_sentence'] = sum(s.count(' ') + 1 for s in sentences)/float(len(sentences))
+	stats['num_words'] = stats['avg_words_per_sentence']*stats['num_sentences']
+	stats['avg_word_length'] = sum(len(s) for s in sentences)/stats['num_words']
 
-# 2. type/token ratio for different genres
+	# return stats
+	output = [stats[x] for x in stats.keys()]
+	return output
 
-# 3. bag of words conversion
+# type/token ratio for different genres
+
+# bag of words conversion
 def bag_of_words(song):
 	"""
 	@param song: A string, corresponding to all or part of a song's lyrics
@@ -62,7 +69,7 @@ def bag_of_words(song):
 		bow[word] += 1
 	return bow
 
-# 4. n-gram extraction
+# n-gram extraction
 def ngram(song, n = 2):
 	"""
 	@param n: n in n-gram, default 2
@@ -72,108 +79,23 @@ def ngram(song, n = 2):
 	ngrams = nltk.ngrams(song.split(), n)
 	return ngrams
 
-# read in train and test data - to make it easy to debug on python terminal
-def prepare_data(filename, num_datapoints=None, featureExtractor=bag_of_words):
-	"""
-	@param filename: The path to CSV file containing the data (pandas format)
-	@param featureExtractor: (optional) The feature extractor you want to use. Default is bag of words
-	@param num_datapoints: (optional) The number of samples to consider 
-							(useful when debugging with small training sample)
-	Returns a list of (feature, class) tuples.
-	"""
-	train_data = pandas.read_csv(filename)
-	train_data = train_data.to_records(index=False)		# Now is a list of tuples (lyrics, genre)
-	train_data = [(featureExtractor(l), g) for i,l,g in train_data]	
-	if not num_datapoints == None:
-		train_data = train_data[:num_datapoints]
-	return train_data
+def tupleify(dataset, twolists=False):
+	# converts a dataframe (2xN) to a list of tuples
 
-def generate_homogenous_dataset():
-	"""
-	Generate a dataset of randomly selected datapoints with equal numbers of each class
-	"""
+	l = dataset['lyrics'].tolist()
+	g = dataset['genres'].tolist()
+	output = (l,g)
+	if twolists == True:
+		# convert output to a list of tuples and not a tuple of lists
+		output = []
+		for i, lric in enumerate(l):
+			output.append(lric, g[i])
+	return output
 
-def performance(prediction_function, testdata, class_labels):
-	"""
-	@param testdata: The testdata in the same form as the training data, i.e. a list of tuples (feature, class)
-	"""
-	# find the number of rows for each genre type
-	genre_count = defaultdict(int)
-	for row in testdata:
-		genre_count[row[1]] += 1
-
-	# Now find the precision and recall for each genre
-	# dicts mapping genres to actual values
-	fp = defaultdict(float)
-	tp = defaultdict(float)
-	tn = defaultdict(float)
-	fn = defaultdict(float)
-
-	for row in testdata:
-		# get classification for song
-		ground_truth_test_genre = row[1]
-		ground_truth_test_lyric = row[0]
-		predicted_genre = prediction_function(ground_truth_test_lyric)
-		# print 'predicted_genre:', predicted_genre, 'genre:', ground_truth_test_genre
-		if predicted_genre == ground_truth_test_genre:
-			# true positive for this genre
-			tp[ground_truth_test_genre] += 1
-			# true negative for all other genres
-			for g in [x for x in range(len(class_labels)) if x != ground_truth_test_genre]:
-				tn[g] += 1
-		else:
-			# wrong prediction, this is a false negative for this genre
-			fn[ground_truth_test_genre] += 1
-			# and it is a false positive for the one predicted
-			# for g in [x for x in range(len(class_labels)) if x != ground_truth_test_genre]:
-			fp[predicted_genre] += 1
-	precision = defaultdict(float)
-	recall = defaultdict(float)
-	accuracy = defaultdict(float)
-
-	def pretty_print(instring):
-		"""
-		Aligns while printing out by putting appropriate number of tabs
-		"""
-		print instring,
-		tabs = '\t\t'
-		if len(instring) > 5:
-			 tabs = '\t'
-		print tabs,
-
-
-	print 'Genre\t\tPrecision\tRecall\tF-1 Score'
-	for genre_index in range(len(class_labels)):
-		try:
-			precision[genre_index] = round(tp[genre_index]/(tp[genre_index] + fp[genre_index]), 4)
-			recall[genre_index] = round(tp[genre_index]/(tp[genre_index] + fn[genre_index]), 4)
-
-			f1 = round(2*precision[genre_index]*recall[genre_index]/(precision[genre_index] + recall[genre_index]), 4)
-
-			pretty_print(class_labels[genre_index])
-			print precision[genre_index], '\t\t', recall[genre_index], '\t\t', f1
-		except ZeroDivisionError:
-			# happens when tp and fp,fn are 0 due to not enough data being there (hence denominator becomes 0)
-			pretty_print(class_labels[genre_index])
-			print 'NA\t\tNA\t\tNA'
-
-	print 'Accuracy : ', float(sum(x for x in tp) + sum(x for x in tn))/len(testdata)
 
 # Caluclating performance for baseline
 if __name__ == "__main__":
-	import classifiers
-	# pandas also adds the index of the row, will be removed in this process
-	train_data = prepare_data('train.csv')
-
-	# train stochastic gradient descent on this, get weights
-	genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
-	baseline = classifiers.Baseline(train_data, genre_labels, debug=True)
-	baseline.stochastic_grad_descent()
-	baseline.saveModel('baseline-21Nov16.txt')
-
-	# Next, find precision recall for all these
-	test_data = prepare_data('test.csv')
-	performance(baseline.predict, test_data, genre_labels)
+	pass
 
 
 

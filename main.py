@@ -30,6 +30,8 @@ from sklearn.metrics import classification_report
 from textblob import TextBlob
 import pandas as pd
 import re
+import util
+import numpy
 
 logistic = LogisticRegression()
 
@@ -79,6 +81,25 @@ def train_logistic(X_train, y_train, X_test, y_test):
 	return LogisticRegressionClassifier
 
 
+def numerical_features(dataset):
+	# Different methodology to extract features
+	X = []
+	y = []
+	for i, l in enumerate(dataset['lyrics'].tolist()):
+		X.append(util.sentence_stats(l))
+		y.append(dataset['genre'][i])
+	X = numpy.array(X)
+
+	X_train, X_test, y_train, y_test  = train_test_split(
+        X, 
+	# X_tfidf,
+        y,
+        train_size=0.80
+    )
+
+	return (X_train, y_train, X_test, y_test)
+
+
 def get_features(dataset, max_features=3000, tokenizer=feature_parse):
 	"""
 	Choose features and the way that features are created
@@ -114,7 +135,7 @@ def get_features(dataset, max_features=3000, tokenizer=feature_parse):
     # vectorizer.vocabulary_ gives the words used in the selected sparse feature matrix (http://stackoverflow.com/questions/22920801/can-i-use-countvectorizer-in-scikit-learn-to-count-frequency-of-documents-that-w)
     # 
 
-	return (X_train, y_train, X_test, y_test, vectorizer)
+	return (X_train, y_train, X_test, y_test)
 
 
 def train_naiveBayes(dataset):
@@ -204,7 +225,8 @@ def run_model(cl):
 		dataset = pd.read_csv(f)
 
 	# Then create the features
-	X_train, y_train, X_test, y_test, vectorizer = get_features(dataset, max_features=5000)
+	# X_train, y_train, X_test, y_test = get_features(dataset, max_features=5000)
+	X_train, y_train, X_test, y_test = numerical_features(dataset)
 
 	# Then run models based on what the argument says
 	if cl2 == 'log':
