@@ -32,6 +32,7 @@ import pandas as pd
 import re
 import util
 import numpy
+import pickle
 
 logistic = LogisticRegression()
 
@@ -42,26 +43,18 @@ valid_models = ['log', 'rfc', 'nn']
 # We fix upon 10 broad genres
 genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 
-# default file from which to read data
-filename = 'songData-Nov22.csv'
+### DO NOT CHANGE THE FILENAMES BELOW THIS LINE!
+topwords_dump_filename = 'TopWords_' + util.filename()
+with open(topwords_dump_filename) as f:
+	topwords = pickle.load(f)
+
+### ------------------------------------------------------------------------------------------####
 
 
-# convert to a format that the algo can use
-# REF: https://www.codementor.io/python/tutorial/data-science-python-r-sentiment-classification-machine-learning
-def feature_parse(data, option='bow'):
-	"""
-	The data is a tuple of tuples (lyrics, genre)
-	"""
-	# perform basic stuff, like stemming
-	# stemmer = PorterStemmer()
-	# data = stemmer.stem(data)
-	if option == 'bow':
-		# perform bag of words feature extraction
-		tokens = re.findall(r"\w+(?:[-']\w+)*|'|[-.(]+|\S\w*", data)		# REF: http://www.nltk.org/book/ch03.html 'Regular expressions for tokenizing text'
-	if option == '3gram':
-		# 3-gram model (TODO: Including backoff?)
-		raise Exception('3-gram has not been implemented yet!')
-	return tokens
+
+### ------------------------------------------------------------------------------------------####
+""" MODEL FUNCTIONS """
+### ------------------------------------------------------------------------------------------####
 
 def train_logistic(X_train, y_train, X_test, y_test):
 	"""
@@ -80,62 +73,6 @@ def train_logistic(X_train, y_train, X_test, y_test):
 
 	return LogisticRegressionClassifier
 
-
-def numerical_features(dataset):
-	# Different methodology to extract features
-	X = []
-	y = []
-	for i, l in enumerate(dataset['lyrics'].tolist()):
-		X.append(util.sentence_stats(l))
-		y.append(dataset['genre'][i])
-	X = numpy.array(X)
-
-	X_train, X_test, y_train, y_test  = train_test_split(
-        X, 
-	# X_tfidf,
-        y,
-        train_size=0.80
-    )
-
-	return (X_train, y_train, X_test, y_test)
-
-
-def get_features(dataset, max_features=3000, tokenizer=feature_parse):
-	"""
-	Choose features and the way that features are created
-	Create train test split from dataset after sparse feature representations are created
-	"""
-	# create an instance of CountVectorizer class which will vectorize the data
-	vectorizer = CountVectorizer(
-	    analyzer = 'word',
-	    tokenizer = tokenizer,
-	    lowercase = False,
-	    stop_words = 'english',
-	    max_features = max_features		# can go upto 5000 on corn.stanford.edu
-	)
-	# Fit the data
-	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
-	data_features = data_features.toarray()
-	# print vectorizer.get_feature_names()
-
-	# tf-idf transformation
-	# TODO: Put option for having or not having this
-	# tfidf_transformer = TfidfTransformer()
-	# X_tfidf = tfidf_transformer.fit_transform(data_features)
-
-	# Now we prepare everything for logistic regression
-	X_train, X_test, y_train, y_test  = train_test_split(
-        data_features, 
-	# X_tfidf,
-        dataset['genre'],
-        train_size=0.80
-    )
-
-    # Can extract a lot of features from the vectorizer
-    # vectorizer.vocabulary_ gives the words used in the selected sparse feature matrix (http://stackoverflow.com/questions/22920801/can-i-use-countvectorizer-in-scikit-learn-to-count-frequency-of-documents-that-w)
-    # 
-
-	return (X_train, y_train, X_test, y_test)
 
 
 def train_naiveBayes(dataset):
@@ -204,6 +141,87 @@ def trainNeuralNet(X_train, y_train, X_test, y_test):
 	return nn
 
 
+### ------------------------------------------------------------------------------------------####
+""" FEATURE EXTRACTION FUNCTIONS """
+### ------------------------------------------------------------------------------------------####
+
+# convert to a format that the algo can use
+# REF: https://www.codementor.io/python/tutorial/data-science-python-r-sentiment-classification-machine-learning
+def feature_parse(data, option='bow'):
+	"""
+	The data is a tuple of tuples (lyrics, genre)
+	"""
+	# perform basic stuff, like stemming
+	# stemmer = PorterStemmer()
+	# data = stemmer.stem(data)
+	if option == 'bow':
+		# perform bag of words feature extraction
+		tokens = re.findall(r"\w+(?:[-']\w+)*|'|[-.(]+|\S\w*", data)		# REF: http://www.nltk.org/book/ch03.html 'Regular expressions for tokenizing text'
+	if option == '3gram':
+		# 3-gram model (TODO: Including backoff?)
+		raise Exception('3-gram has not been implemented yet!')
+	return tokens
+
+def numerical_features(dataset):
+	# Different methodology to extract features
+	X = []
+	y = []
+	for i, l in enumerate(dataset['lyrics'].tolist()):
+		X.append(util.sentence_stats(l))
+		y.append(dataset['genre'][i])
+	X = numpy.array(X)
+
+	X_train, X_test, y_train, y_test  = train_test_split(
+        X, 
+	# X_tfidf,
+        y,
+        train_size=0.80
+    )
+
+	return (X_train, y_train, X_test, y_test)
+
+
+def get_features(dataset, max_features=3000, tokenizer=feature_parse):
+	"""
+	Choose features and the way that features are created
+	Create train test split from dataset after sparse feature representations are created
+	"""
+	# create an instance of CountVectorizer class which will vectorize the data
+	vectorizer = CountVectorizer(
+	    analyzer = 'word',
+	    tokenizer = tokenizer,
+	    lowercase = False,
+	    stop_words = 'english',
+	    max_features = max_features		# can go upto 5000 on corn.stanford.edu
+	)
+	# Fit the data
+	data_features = vectorizer.fit_transform(dataset['lyrics'].tolist())
+	data_features = data_features.toarray()
+	# print vectorizer.get_feature_names()
+
+	# tf-idf transformation
+	# TODO: Put option for having or not having this
+	# tfidf_transformer = TfidfTransformer()
+	# X_tfidf = tfidf_transformer.fit_transform(data_features)
+
+	# Now we prepare everything for logistic regression
+	X_train, X_test, y_train, y_test  = train_test_split(
+        data_features, 
+	# X_tfidf,
+        dataset['genre'],
+        train_size=0.80
+    )
+
+    # Can extract a lot of features from the vectorizer
+    # vectorizer.vocabulary_ gives the words used in the selected sparse feature matrix (http://stackoverflow.com/questions/22920801/can-i-use-countvectorizer-in-scikit-learn-to-count-frequency-of-documents-that-w)
+    # 
+
+	return (X_train, y_train, X_test, y_test)
+
+### ------------------------------------------------------------------------------------------####
+""" MODEL RUNNING AND COMMAND LINE PARSING FUNCTIONS """
+### ------------------------------------------------------------------------------------------####
+
 def run_model(cl):
 	"""
 	@param cl: The command line index from which to consider the model command
@@ -220,9 +238,10 @@ def run_model(cl):
 	assert cl2 in valid_models, command_line_syntax('You have chosen an invalid model!')
 
 	# First read in the data
-	print 'Reading in data...'
-	with open(filename, 'r') as f:
+	print 'Reading in data...',
+	with open(util.filename(), 'r') as f:
 		dataset = pd.read_csv(f)
+	print 'done!'
 
 	# Then create the features
 	# X_train, y_train, X_test, y_test = get_features(dataset, max_features=5000)

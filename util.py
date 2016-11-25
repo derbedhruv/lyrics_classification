@@ -6,7 +6,13 @@
 import pandas
 from collections import defaultdict
 import math
+import pickle
 
+# default file from which to read data
+### ------------------------------------------------------------------------------------------####
+def filename():
+	return 'songData-Nov22.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
+### ------------------------------------------------------------------------------------------####
 
 def increment(d1, scale, d2):
     """
@@ -43,17 +49,38 @@ def logistic(weights, x):
 # sentence count
 def sentence_stats(song_string):
 	# input a string representation of a song's lyrics
-	stats = defaultdict(int)
-	stats['num_verses'] = song_string.count('\n\n')
+	# stats = defaultdict(int)
+	# stats['num_verses'] = song_string.count('\n\n')
 	sentences = song_string.split('\n')
-	stats['num_sentences'] = len(sentences) - stats['num_verses'] + 1
-	stats['avg_words_per_sentence'] = sum(s.count(' ') + 1 for s in sentences)/float(len(sentences))
-	stats['num_words'] = stats['avg_words_per_sentence']*stats['num_sentences']
-	stats['avg_word_length'] = sum(len(s) for s in sentences)/stats['num_words']
+	words = song_string.split()
+	# stats['num_sentences'] = len(sentences) - stats['num_verses'] + 1
+	# stats['avg_words_per_sentence'] = sum(s.count(' ') + 1 for s in sentences)/float(len(sentences))
+	# stats['num_words'] = len(words)
+	# stats['avg_word_length'] = sum(len(w) for w in words)/len(words)
+
+	stats = []
+	# important numerical features
+	stats.append(song_string.count('\n\n'))
+	stats.append(len(sentences) - stats[0] + 1)		# stats[0] <--> no of verses
+	stats.append(sum(s.count(' ') + 1 for s in sentences)/float(len(sentences)))
+	stats.append(len(words))
+	stats.append(sum(len(w) for w in words)/len(words))
+
+	# next, get the number of occurences of top words
+	topwords_dump_filename = 'TopWords_' + filename()
+	with open(topwords_dump_filename) as f:
+		topwords = pickle.load(f)
+
+	# reduce only to useful words..
+	topwords_only = [w for w in words if w in topwords]
+	for tw in topwords:
+		# stats['count_' + tw] += topwords_only.count(tw)
+		stats.append(topwords_only.count(tw))
 
 	# return stats
-	output = [stats[x] for x in stats.keys()]
-	return output
+	# output = [stats[x] for x in stats.keys()]
+	# return output
+	return stats
 
 ''' the following functions have been used only once - for the preliminary analysis of songs '''
 ''' -----------------------------------------------------------------------------------------'''
@@ -88,7 +115,6 @@ def NmostCom(dataset, N):
 def save100MostComPerGenre():
 	# Read in from same consistent filename used in main
 	# Then call the NmostCom function
-	from main import filename
 	dataset = pandas.read_csv(filename)
 	mostCommon200Words = NmostCom(dataset, 200)
 
@@ -102,7 +128,19 @@ def save100MostComPerGenre():
 		converted_list[j] = converted_list[j][:100]
 	return converted_list
 
+# Find the most common 400 words of all genres
+def save400MostCom():
+	dataset = pandas.read_csv(filename())
+	mostCommon200Words = NmostCom(dataset, 200)
 
+	# Now just make a set of all the distinct words
+	setofwords = set(x[0] for y in mostCommon200Words for x in y)	# this is found to be 428 words on the Nov-22 dataset
+
+	# dump the pickle
+	dumpfile = 'TopWords_'+filename
+	print 'saving to ', dumpfile
+	with open(dumpfile, 'w') as f:
+		pickle.dump(setofwords, f)
 
 ''' -----------------------------------------------------------------------------------------'''
 
