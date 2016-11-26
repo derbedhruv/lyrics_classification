@@ -4,7 +4,7 @@
 ---------------------------------------------------------------- """
 # extract statistics about a song
 import pandas
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import math
 import pickle
 import operator
@@ -187,24 +187,20 @@ def regressiveID(song_string):
 	##	ABSTRACTION, SOCIAL BEHAVIOR, INSTRUMENTAL BEHAVIOR, RESTRAINT, ORDER, TEMPORAL REFERENCES, MORAL IMPERATIVE
 	# EMOTIONS - 
 	## 	POSITIVE AFFECT, ANXIETY, SADNESS, AFFECTION, AGGRESSION, EXPRESSIVE BEHAVIOR, GLORY
+	RID_CATEGORIES = [
+	'PRIMARY:NEED:ORALITY', 'PRIMARY:NEED:ANALITY', 'PRIMARY:NEED:SEX',
+	'PRIMARY:SENSATION:TOUCH', 'PRIMARY:SENSATION:TASTE', 'PRIMARY:SENSATION:ODOR', 'PRIMARY:SENSATION:GENERAL-SENSATION', 'PRIMARY:SENSATION:SOUND', 'PRIMARY:SENSATION:VISION', 'PRIMARY:SENSATION:COLD', 'PRIMARY:SENSATION:HARD', 'PRIMARY:SENSATION:SOFT',
+	'PRIMARY:DEFENSIVE SYMBOLIZATION:PASSIVITY', 'PRIMARY:DEFENSIVE SYMBOLIZATION:VOYAGE', 'PRIMARY:DEFENSIVE SYMBOLIZATION:RANDOM MOVEMENT', 'PRIMARY:DEFENSIVE SYMBOLIZATION:DIFFUSION', 'PRIMARY:DEFENSIVE SYMBOLIZATION:CHAOS',
+	'PRIMARY:REGRESSIVE COGNITION:UNKNOWN', 'PRIMARY:REGRESSIVE COGNITION:TIMELESSNESS', 'PRIMARY:REGRESSIVE COGNITION:CONSCIOUSNESS ALTERATION', 'PRIMARY:REGRESSIVE COGNITION:BRINK-PASSAGE', 'PRIMARY:REGRESSIVE COGNITION:NARCISSISM', 'PRIMARY:REGRESSIVE COGNITION:CONCRETENESS',
+	'PRIMARY:ICARIAN IMAGERY:ASCENT', 'PRIMARY:ICARIAN IMAGERY:HEIGHT', 'PRIMARY:ICARIAN IMAGERY:DESCENT', 'PRIMARY:ICARIAN IMAGERY:DEPTH', 'PRIMARY:ICARIAN IMAGERY:FIRE', 'PRIMARY:ICARIAN IMAGERY:WATER',
+	'SECONDARY:ABSTRACTION', 'SECONDARY:SOCIAL BEHAVIOR', 'SECONDARY:INSTRUMENTAL BEHAVIOR', 'SECONDARY:RESTRAINT', 'SECONDARY:ORDER', 'SECONDARY:TEMPORAL REFERENCES', 'SECONDARY:MORAL IMPERATIVE',
+	'EMOTIONS:POSITIVE AFFECT', 'EMOTIONS:ANXIETY', 'EMOTIONS:SADNESS', 'EMOTIONS:AFFECTION', 'EMOTIONS:AGGRESSION', 'EMOTIONS:EXPRESSIVE BEHAVIOR', 'EMOTIONS:GLORY'
+	]
+	# create ordered dictionary which will hold these categories and convert to vector
+	rid_dictionary = OrderedDict()
+	for cat in RID_CATEGORIES:
+		rid_dictionary[cat] = 0		# initialize all to 0
 
-	rid_dictionary = {
-						'PRIMARY':
-									{
-									'NEED': {'ORALITY':0, 'ANALITY':0, 'SEX':0},
-									'SENSATION': {'TOUCH':0, 'TASTE':0, 'ODOR':0, 'GENERAL-SENSATION':0, 'SOUND':0, 'VISION':0, 'COLD':0, 'HARD':0, 'SOFT':0},
-									'DEFENSIVE SYMBOLIZATION': {'PASSIVITY':0, 'VOYAGE':0, 'RANDOM MOVEMENT':0, 'DIFFUSION':0, 'CHAOS':0},
-									'REGRESSIVE COGNITION': {'UNKNOWN':0, 'TIMELESSNESS':0, 'CONSCIOUSNESS ALTERATION':0, 'BRINK-PASSAGE':0, 'NARCISSISM':0, 'CONCRETENESS':0},
-									'ICARIAN IMAGERY': {'ASCENT':0, 'HEIGHT':0, 'DESCENT':0, 'DEPTH':0, 'FIRE':0, 'WATER':0}
-									}, 
-
-						'SECONDARY':{
-										'ABSTRACTION':0, 'SOCIAL BEHAVIOR':0, 'INSTRUMENTAL BEHAVIOR':0, 'RESTRAINT':0, 'ORDER':0, 'TEMPORAL REFERENCES':0, 'MORAL IMPERATIVE':0
-									}, 
-						'EMOTIONS':{
-										'POSITIVE AFFECT':0, 'ANXIETY':0, 'SADNESS':0, 'AFFECTION':0, 'AGGRESSION':0, 'EXPRESSIVE BEHAVIOR':0, 'GLORY':0
-						}
-					}
 
 	ridict = rid.RegressiveImageryDictionary()
 	ridict.load_dictionary_from_string(rid.DEFAULT_RID_DICTIONARY)
@@ -216,7 +212,10 @@ def regressiveID(song_string):
 	total_count = 0
 	for (category, count) in sorted(results.category_count.items(), key=lambda x: x[1], reverse=True):
 	    print "%-60s %5s" % (category.full_name(), count)
-	    print "    " + " ".join(results.category_words[category])
+
+	    # append to the dict
+	    rid_dictionary[category.full_name()] = count
+	    # print "    " + " ".join(results.category_words[category])
 	    total_count += count
 
 	# Summary for each top-level category
@@ -246,6 +245,9 @@ def regressiveID(song_string):
 	for top_category in top_categories:
 	    count = top_category_counts[top_category]
 	    print "%-20s: %f %%" % (top_category.full_name(), percent(count, total_count))
+
+	# need to perform DFS on rid_dictionary and return the vector of results
+	return [rid_dictionary[x] for x in rid_dictionary]
 
 
 ''' -----------------------------------------------------------------------------------------'''
