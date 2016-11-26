@@ -239,7 +239,7 @@ def run_model(cl):
 
 	# First read in the data
 	print 'Reading in data...',
-	with open(util.filename(), 'r') as f:
+	with open(util.get_filename(), 'r') as f:
 		dataset = pd.read_csv(f)
 	print 'done!'
 
