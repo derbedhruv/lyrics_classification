@@ -44,9 +44,9 @@ valid_models = ['log', 'rfc', 'nn']
 genres = util.get_genres()
 
 ### DO NOT CHANGE THE FILENAMES BELOW THIS LINE!
-topwords_dump_filename = 'TopWords_' + util.get_filename()
-with open(topwords_dump_filename) as f:
-	topwords = pickle.load(f)
+# topwords_dump_filename = 'TopWords_' + util.get_filename()
+# with open(topwords_dump_filename) as f:
+#	topwords = pickle.load(f)
 
 ### ------------------------------------------------------------------------------------------####
 
@@ -164,19 +164,36 @@ def feature_parse(data, option='bow'):
 
 def numerical_features(dataset):
 	# Different methodology to extract features
-	X = []
-	y = []
+	'''
 	for i, l in enumerate(dataset['lyrics'].tolist()):
 		X.append(util.sentence_stats(l))
 		y.append(dataset['genre'][i])
-	X = numpy.array(X)
+	'''
+	# FIRST split into train test sets
+	D_train, D_test, y_train, y_test  = train_test_split(dataset['lyrics'], dataset['genre'], train_size=0.80)
 
-	X_train, X_test, y_train, y_test  = train_test_split(
-        X, 
-	# X_tfidf,
-        y,
-        train_size=0.80
-    )
+	# Then extract most popular words and n-grams from the training set ONLY
+	print 'generating topwords and topngrams..',
+	topwords = util.NmostComWords(D_train, y_train)
+	topngrams = util.NMostComNgrams(D_train, y_train)
+	print 'done!'
+
+	# convert to design matrices
+	# for i,l in enumerate(D_train):
+	#	X_train.append(util.sentence_stats(l, topwords))
+	print 'converting to vectors..',
+	X_train = [util.sentence_stats(l, topwords) for l in D_train]
+	X_test = [util.sentence_stats(l, topwords) for l in D_test]
+	print 'done!'
+
+	# for i,l in enumerate(D_test):
+	#	X_test.append(util.sentence_stats(l, topwords)) 
+
+	# convert all to numpy arrays before shipping out
+	X_train = numpy.array(X_train)
+	y_train = numpy.array(y_train)
+	X_test = numpy.array(X_test)
+	y_test = numpy.array(y_test)
 
 	return (X_train, y_train, X_test, y_test)
 

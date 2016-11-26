@@ -62,7 +62,16 @@ def logistic(weights, x):
 	return 1./(1 + math.exp(-dotProduct(weights, x)))
 
 # sentence count
-def sentence_stats(song_string):
+def sentence_stats(song_string, topwords):
+	"""
+	@param song_string: string representation of the song lyrics
+	@param topwords: A list of top words to be bag-of-words type features 
+					(i.e. appended to the feature vector as no of occurences of that word in song_string)
+	THE feature generator. Returns a list of ints, corresponding to preset ordered features.
+	The first part of the features is song stats,
+	Then is topwords (one-hot features)
+	Then RegressiveImageryDictionary features
+	"""
 	# input a string representation of a song's lyrics
 	# stats = defaultdict(int)
 	# stats['num_verses'] = song_string.count('\n\n')
@@ -82,17 +91,19 @@ def sentence_stats(song_string):
 	stats.append(sum(len(w) for w in words)/len(words))
 
 	# next, get the number of occurences of top words
-	topwords_dump_filename = 'TopWords_' + filename
-	with open(topwords_dump_filename) as f:
-		topwords = pickle.load(f)
-
-	# reduce only to useful words..
-	topwords_only = [w for w in words if w in topwords]
+	# TODO: Generate this from training dataset ONLY
+	# topwords_dump_filename = 'TopWords_' + filename
+	# with open(topwords_dump_filename) as f:
+	# 	topwords = pickle.load(f)
 
 	# ADD FEATURES FOR TOP WORDS (BAG OF {selected} WORDS)
+	# reduce only to useful words..
+	topwords_only = [w for w in words if w in topwords]
 	for tw in topwords:
 		# stats['count_' + tw] += topwords_only.count(tw)
 		stats.append(topwords_only.count(tw))
+
+	# TODO: Add the same for top ngrams
 
 	# ADD FEATURES FOR REGRESSIVE IMAGERY DICTIONARY
 	rid_features = regressiveID(song_string)
@@ -107,13 +118,13 @@ def sentence_stats(song_string):
 ''' -----------------------------------------------------------------------------------------'''
 
 # return the N most commonly used words in a group of songs entered
-def NmostCom(dataset, N):
+def NmostComWords(X_train, y_train, N=200):
 	# input is a dataframe with 'lyrics' and 'genre' as headers
 	# Returns a defaultdict, with avg no of times word appears in each song in the dataset
-	lyrics_set = dataset['lyrics'].tolist()
-	genres_set = dataset['genre'].tolist()
+	lyrics_set = X_train.tolist()
+	genres_set = y_train.tolist()
 
-	L = len(dataset)
+	L = len(X_train)
 	words = [defaultdict(float) for _ in range(num_genres)]
 
 	for i, song in enumerate(lyrics_set):
@@ -124,10 +135,11 @@ def NmostCom(dataset, N):
 	sorted_list = range(num_genres)		# empty list with num_genres elements needed
 	for i in range(num_genres):
 		sorted_list[i] = sorted(words[i].items(), key=operator.itemgetter(1))[-N:]	# http://stackoverflow.com/questions/613183/sort-a-python-dictionary-by-value
-	return sorted_list
+	return set(x[0] for y in sorted_list for x in y)
 
 # Find the 200 most common words in each genre,
 # Then remove all common words for each genre and keep the 100 remaining for each
+"""
 def save100MostComPerGenre():
 	# Read in from same consistent filename used in main
 	# Then call the NmostCom function
@@ -145,26 +157,32 @@ def save100MostComPerGenre():
 	return converted_list
 
 # Find the most common 400 words of all genres
-def save400MostCom():
-	dataset = pandas.read_csv(filename)
-	mostCommon200Words = NmostCom(dataset, 200)
+def MostComWords(X_train, y_train, save_to_file=False):
+	# returns a SET of the most common words in your training dataset
+	mostCommon200Words = NmostCom(X_train, y_train, 200)
 
 	# Now just make a set of all the distinct words
 	setofwords = set(x[0] for y in mostCommon200Words for x in y)	# this is found to be 428 words on the Nov-22 dataset
 
-	# dump the pickle
-	dumpfile = 'TopWords_'+filename
-	print 'saving to ', dumpfile
-	with open(dumpfile, 'w') as f:
-		pickle.dump(setofwords, f)
+	if save_to_file:
+		# dump the pickle
+		dumpfile = 'TopWords_'+filename
+		print 'saving to ', dumpfile
+		with open(dumpfile, 'w') as f:
+			pickle.dump(setofwords, f)
+	return setofwords
+"""
 
-def NMostComNgrams(dataset, n=2, N=100):
+def NMostComNgrams(X_train, y_train, n=2, N=100):
+	# input X_train and y_train are parts of the same pandas dataframe
+	# NOTE: Setting n=1 will NOT return the same thing as NmostComWords() because the latter disregards stopwords
+	# while this function does NOT disregard them.
+	# Returns a set of n-grams
 	# n - the n-gram to consider
-	# dataset - dataframe of ['lyrics', 'genre']
-	lyrics_set = dataset['lyrics'].tolist()
-	genres_set = dataset['genre'].tolist()
+	lyrics_set = X_train.tolist()
+	genres_set = y_train.tolist()
 
-	L = len(dataset)
+	L = len(X_train)
 	ngrams = [defaultdict(float) for _ in range(num_genres)]
 
 	for i, song in enumerate(lyrics_set):
@@ -176,7 +194,7 @@ def NMostComNgrams(dataset, n=2, N=100):
 	sorted_list = range(num_genres)		# empty list with num_genres elements needed
 	for i in range(num_genres):
 		sorted_list[i] = sorted(ngrams[i].items(), key=operator.itemgetter(1))[-N:]	# http://stackoverflow.com/questions/613183/sort-a-python-dictionary-by-value
-	return sorted_list
+	return set(x[0] for y in sorted_list for x in y)
 
 # Setting up Regressive Imagery Dictionary stuff
 def regressiveID(song_string):
@@ -217,7 +235,7 @@ def regressiveID(song_string):
 	# referring to the source code
 	total_count = 0
 	for (category, count) in sorted(results.category_count.items(), key=lambda x: x[1], reverse=True):
-	    print "%-60s %5s" % (category.full_name(), count)
+	    # print "%-60s %5s" % (category.full_name(), count)
 
 	    # append to the dict
 	    rid_dictionary[category.full_name()] = count
@@ -225,6 +243,7 @@ def regressiveID(song_string):
 	    total_count += count
 
 	# Summary for each top-level category
+	'''
 	top_categories = ridict.category_tree.children.values()
 
 	def get_top_category(cat):
@@ -251,8 +270,8 @@ def regressiveID(song_string):
 	for top_category in top_categories:
 	    count = top_category_counts[top_category]
 	    print "%-20s: %f %%" % (top_category.full_name(), percent(count, total_count))
-
-	# need to perform DFS on rid_dictionary and return the vector of results
+	'''
+	# return vector of results
 	return [rid_dictionary[x] for x in rid_dictionary]
 
 
