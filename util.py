@@ -17,7 +17,8 @@ num_genres = len(genres)
 
 # default values for important stuff
 ### ------------------------------------------------------------------------------------------####
-genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+def genres():
+	return ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 def filename():
 	return 'songData-Nov25.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
 ### ------------------------------------------------------------------------------------------####

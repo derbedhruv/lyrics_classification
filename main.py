@@ -41,7 +41,7 @@ valid_cli_args = ['-f', '-m']
 valid_models = ['log', 'rfc', 'nn']
 
 # We fix upon 10 broad genres
-from util import genres
+genres = util.genres()
 
 ### DO NOT CHANGE THE FILENAMES BELOW THIS LINE!
 topwords_dump_filename = 'TopWords_' + util.filename()
