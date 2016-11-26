@@ -62,7 +62,7 @@ def logistic(weights, x):
 	return 1./(1 + math.exp(-dotProduct(weights, x)))
 
 # sentence count
-def sentence_stats(song_string, topwords):
+def sentence_stats(song_string, ridict, topwords):
 	"""
 	@param song_string: string representation of the song lyrics
 	@param topwords: A list of top words to be bag-of-words type features 
@@ -107,7 +107,7 @@ def sentence_stats(song_string, topwords):
 	# TODO: Add the same for top ngrams
 
 	# ADD FEATURES FOR REGRESSIVE IMAGERY DICTIONARY
-	rid_features = regressiveID(song_string)
+	rid_features = analyzeRID(song_string, ridict)
 	stats += rid_features
 
 	# return stats
@@ -198,7 +198,7 @@ def NMostComNgrams(X_train, y_train, n=2, N=100):
 	return set(x[0] for y in sorted_list for x in y)
 
 # Setting up Regressive Imagery Dictionary stuff
-def regressiveID(song_string):
+def setupRID():
 	# Defining a new RID
 	# taken from https://github.com/jefftriplett/rid.py/blob/master/rid.py
 	# The different categories that can be judged are :
@@ -230,10 +230,34 @@ def regressiveID(song_string):
 	ridict = rid.RegressiveImageryDictionary()
 	ridict.load_dictionary_from_string(rid.DEFAULT_RID_DICTIONARY)
 	ridict.load_exclusion_list_from_string(rid.DEFAULT_RID_EXCLUSION_LIST)
+
+	return ridict
+
+def analyzeRID(song_string, ridict):
+	# return a vector of results of RID
+	RID_CATEGORIES = [
+	'PRIMARY:NEED:ORALITY', 'PRIMARY:NEED:ANALITY', 'PRIMARY:NEED:SEX',
+	'PRIMARY:SENSATION:TOUCH', 'PRIMARY:SENSATION:TASTE', 'PRIMARY:SENSATION:ODOR', 'PRIMARY:SENSATION:GENERAL-SENSATION', 'PRIMARY:SENSATION:SOUND', 'PRIMARY:SENSATION:VISION', 'PRIMARY:SENSATION:COLD', 'PRIMARY:SENSATION:HARD', 'PRIMARY:SENSATION:SOFT',
+	'PRIMARY:DEFENSIVE SYMBOLIZATION:PASSIVITY', 'PRIMARY:DEFENSIVE SYMBOLIZATION:VOYAGE', 'PRIMARY:DEFENSIVE SYMBOLIZATION:RANDOM MOVEMENT', 'PRIMARY:DEFENSIVE SYMBOLIZATION:DIFFUSION', 'PRIMARY:DEFENSIVE SYMBOLIZATION:CHAOS',
+	'PRIMARY:REGRESSIVE COGNITION:UNKNOWN', 'PRIMARY:REGRESSIVE COGNITION:TIMELESSNESS', 'PRIMARY:REGRESSIVE COGNITION:CONSCIOUSNESS ALTERATION', 'PRIMARY:REGRESSIVE COGNITION:BRINK-PASSAGE', 'PRIMARY:REGRESSIVE COGNITION:NARCISSISM', 'PRIMARY:REGRESSIVE COGNITION:CONCRETENESS',
+	'PRIMARY:ICARIAN IMAGERY:ASCENT', 'PRIMARY:ICARIAN IMAGERY:HEIGHT', 'PRIMARY:ICARIAN IMAGERY:DESCENT', 'PRIMARY:ICARIAN IMAGERY:DEPTH', 'PRIMARY:ICARIAN IMAGERY:FIRE', 'PRIMARY:ICARIAN IMAGERY:WATER',
+	'SECONDARY:ABSTRACTION', 'SECONDARY:SOCIAL BEHAVIOR', 'SECONDARY:INSTRUMENTAL BEHAVIOR', 'SECONDARY:RESTRAINT', 'SECONDARY:ORDER', 'SECONDARY:TEMPORAL REFERENCES', 'SECONDARY:MORAL IMPERATIVE',
+	'EMOTIONS:POSITIVE AFFECT', 'EMOTIONS:ANXIETY', 'EMOTIONS:SADNESS', 'EMOTIONS:AFFECTION', 'EMOTIONS:AGGRESSION', 'EMOTIONS:EXPRESSIVE BEHAVIOR', 'EMOTIONS:GLORY'
+	]
+	rid_dictionary = OrderedDict()
+	for cat in RID_CATEGORIES:
+		rid_dictionary[cat] = 0		# initialize all to 0
+
 	results = ridict.analyze(song_string)
+	out_vector = []
 
 	# Need to get the values from 'results' easily
 	# referring to the source code
+	for (category, count) in results.category_count.items():
+		rid_dictionary[category.full_name()] = count
+
+
+	'''
 	total_count = 0
 	for (category, count) in sorted(results.category_count.items(), key=lambda x: x[1], reverse=True):
 	    # print "%-60s %5s" % (category.full_name(), count)
@@ -244,7 +268,6 @@ def regressiveID(song_string):
 	    total_count += count
 
 	# Summary for each top-level category
-	'''
 	top_categories = ridict.category_tree.children.values()
 
 	def get_top_category(cat):

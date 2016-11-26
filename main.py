@@ -170,6 +170,7 @@ def numerical_features(dataset):
 		y.append(dataset['genre'][i])
 	'''
 	# FIRST split into train test sets
+	ridict = util.setupRID()	# setup RID object
 	D_train, D_test, y_train, y_test  = train_test_split(dataset['lyrics'], dataset['genre'], train_size=0.80)
 
 	# Then extract most popular words and n-grams from the training set ONLY
@@ -182,8 +183,8 @@ def numerical_features(dataset):
 	# for i,l in enumerate(D_train):
 	#	X_train.append(util.sentence_stats(l, topwords))
 	print 'converting to vectors..',
-	X_train = [util.sentence_stats(l, topwords) for l in D_train]
-	X_test = [util.sentence_stats(l, topwords) for l in D_test]
+	X_train = [util.sentence_stats(l, ridict, topwords) for l in D_train]
+	X_test = [util.sentence_stats(l, ridict, topwords) for l in D_test]
 	print 'done!'
 
 	# for i,l in enumerate(D_test):
