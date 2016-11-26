@@ -7,7 +7,7 @@ from collections import defaultdict
 import MySQLdb
 
 # global constants
-MIN_SONGS = 25	# minimum number of songs for artist to be considered
+MIN_SONGS = 100	# minimum number of songs for artist to be considered
 MIN_LYRICS_CHARCOUNT = 50	# minimum character count for a song's lyrics to be considered
 
 # Now connect to the database - store credentials in ~/.my.cnf
@@ -134,8 +134,8 @@ def extract_artist(alph, artist_page = 0, genres_considered=['Rock', 'Pop', 'Hip
 
 if __name__ == "__main__":
 	# alphabets_list = string.lowercase
-	alphabets_list = ['k']
+	alphabets_list = ['b']
 	for alph in alphabets_list:
 		# TODO: spawn a new thread for each call to extract_artist
-		extract_artist(alph, artist_page = 62, genres_considered = ['Folk', 'Jazz', 'Blues', 'R&B;'])
+		extract_artist(alph, artist_page = 159, genres_considered = ['Pop'])
 

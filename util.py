@@ -7,11 +7,18 @@ import pandas
 from collections import defaultdict
 import math
 import pickle
+import operator
+import nltk
+from stop_words import get_stop_words	# https://pypi.python.org/pypi/stop-words
+stop_words = get_stop_words('en')
+
+from main import genres
+num_genres = len(genres)
 
 # default file from which to read data
 ### ------------------------------------------------------------------------------------------####
 def filename():
-	return 'songData-Nov22.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
+	return 'songData-Nov25.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
 ### ------------------------------------------------------------------------------------------####
 
 def increment(d1, scale, d2):
@@ -89,26 +96,21 @@ def sentence_stats(song_string):
 def NmostCom(dataset, N):
 	# input is a dataframe with 'lyrics' and 'genre' as headers
 	# Returns a defaultdict, with avg no of times word appears in each song in the dataset
-	import operator
-	from stop_words import get_stop_words	# https://pypi.python.org/pypi/stop-words
-	stop_words = get_stop_words('en')
-
 	lyrics_set = dataset['lyrics'].tolist()
 	genres_set = dataset['genre'].tolist()
 
 	L = len(dataset)
-	words = [defaultdict(float) for _ in range(10)]
+	words = [defaultdict(float) for _ in range(num_genres)]
 
 	for i, song in enumerate(lyrics_set):
 		considered_words = set([s.lower() for s in song.split()]) - set(stop_words)
 		for w in considered_words:
 			words[genres_set[i]][w] += 1./L
 	# sorting will create a new list of tuples
-	sorted_list = range(10)		# empty list with 10 elements needed
-	for i in range(10):
+	sorted_list = range(num_genres)		# empty list with num_genres elements needed
+	for i in range(num_genres):
 		sorted_list[i] = sorted(words[i].items(), key=operator.itemgetter(1))[-N:]	# http://stackoverflow.com/questions/613183/sort-a-python-dictionary-by-value
 	return sorted_list
-
 
 # Find the 200 most common words in each genre,
 # Then remove all common words for each genre and keep the 100 remaining for each
@@ -120,8 +122,8 @@ def save100MostComPerGenre():
 
 	# Then remove common words from all
 	# convert to lists
-	converted_list = range(10)	# empty list with 10 elements initialized
-	for j in range(10):
+	converted_list = range(num_genres)	# empty list with 10 elements initialized
+	for j in range(num_genres):
 		words_in_others = set([x[0] for i, y in enumerate(mostCommon200Words)for x in y if not i == j])
 		exclusive_words_in_this_genre = set([x[0] for x in mostCommon200Words[j]])
 		converted_list[j] = list(exclusive_words_in_this_genre - words_in_others)
@@ -142,9 +144,16 @@ def save400MostCom():
 	with open(dumpfile, 'w') as f:
 		pickle.dump(setofwords, f)
 
-''' -----------------------------------------------------------------------------------------'''
+def NMostComNgrams(dataset, n):
+	# n - the n-gram to consider
+	# dataset - dataframe of ['lyrics', 'genre']
+	lyrics_set = dataset['lyrics'].tolist()
+	genres_set = dataset['genre'].tolist()
 
-# type/token ratio for different genres
+	L = len(dataset)
+	ngrams = [defaultdict(float) for _ in range(num_genres)]
+
+''' -----------------------------------------------------------------------------------------'''
 
 # bag of words conversion
 def bag_of_words(song):
@@ -163,6 +172,7 @@ def ngram(song, n = 2):
 	"""
 	@param n: n in n-gram, default 2
 	@param song: string input, song lyrics
+	@param splitchar: The char at which to split the song lyrics (e.g.: '\n')
 	Returns a generator expression for tuples containing n-grams
 	"""
 	ngrams = nltk.ngrams(song.split(), n)
