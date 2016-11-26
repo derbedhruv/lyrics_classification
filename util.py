@@ -12,16 +12,17 @@ import nltk
 from stop_words import get_stop_words	# https://pypi.python.org/pypi/stop-words
 stop_words = get_stop_words('en')
 
-from main import genres
-num_genres = len(genres)
 
 # default values for important stuff
 ### ------------------------------------------------------------------------------------------####
-def genres():
-	return ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
-def filename():
-	return 'songData-Nov25.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
+def get_genres():
+	return genres
+def get_filename():
+	return filename	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
 ### ------------------------------------------------------------------------------------------####
+filename = 'songData-Nov25.csv'
+genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+num_genres = len(genres)
 
 def increment(d1, scale, d2):
     """
@@ -134,7 +135,7 @@ def save100MostComPerGenre():
 
 # Find the most common 400 words of all genres
 def save400MostCom():
-	dataset = pandas.read_csv(filename())
+	dataset = pandas.read_csv(get_filename())
 	mostCommon200Words = NmostCom(dataset, 200)
 
 	# Now just make a set of all the distinct words
