@@ -15,8 +15,9 @@ stop_words = get_stop_words('en')
 from main import genres
 num_genres = len(genres)
 
-# default file from which to read data
+# default values for important stuff
 ### ------------------------------------------------------------------------------------------####
+genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 def filename():
 	return 'songData-Nov25.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
 ### ------------------------------------------------------------------------------------------####

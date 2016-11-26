@@ -41,7 +41,7 @@ valid_cli_args = ['-f', '-m']
 valid_models = ['log', 'rfc', 'nn']
 
 # We fix upon 10 broad genres
-genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+from util import genres
 
 ### DO NOT CHANGE THE FILENAMES BELOW THIS LINE!
 topwords_dump_filename = 'TopWords_' + util.filename()
