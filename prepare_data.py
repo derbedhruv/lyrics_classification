@@ -4,6 +4,7 @@ import MySQLdb
 import re
 import pandas as pd
 import collections
+from sklearn.model_selection import train_test_split
 
 genres_list = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
 accepted_characters = set('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\',.\n\r ')
@@ -39,6 +40,11 @@ def get_data(genres=genres_list):
 	# convert to pandas
 	dataset = pd.DataFrame.from_records(dataset, columns=['lyrics', 'genre'])
 	return dataset
+
+def create_train_test(dataset):
+	# returns two datasets, train which is randomly sampled 80% of the set and test which is 20%
+	train, test = train_test_split(dataset, test_size = 0.2)
+	return (train, test)
 
 
 if __name__ == "__main__":

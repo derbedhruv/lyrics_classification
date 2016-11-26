@@ -178,8 +178,10 @@ def ngram(song, n = 2):
 	@param splitchar: The char at which to split the song lyrics (e.g.: '\n')
 	Returns a generator expression for tuples containing n-grams
 	"""
-	ngrams = nltk.ngrams(song.split(), n)
-	return ngrams
+	ngs = defaultdict(float)
+	for line in song.split('\n'):
+		for ngram in nltk.ngrams(line.split(), n):
+			ngs[ngram] += 1./L
 
 def tupleify(dataset, twolists=False):
 	# converts a dataframe (2xN) to a list of tuples
