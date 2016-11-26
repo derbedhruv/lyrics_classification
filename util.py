@@ -10,19 +10,24 @@ import pickle
 import operator
 import nltk
 from stop_words import get_stop_words	# https://pypi.python.org/pypi/stop-words
+import rid 	# https://github.com/jefftriplett/rid.py
+
 stop_words = get_stop_words('en')
 
 
 # default values for important stuff
 ### ------------------------------------------------------------------------------------------####
+filename = 'songData-Nov26.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
+genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+### ------------------------------------------------------------------------------------------####
+
+num_genres = len(genres)
+
 def get_genres():
 	return genres
+
 def get_filename():
-	return filename	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
-### ------------------------------------------------------------------------------------------####
-filename = 'songData-Nov25.csv'
-genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
-num_genres = len(genres)
+	return filename	
 
 def increment(d1, scale, d2):
     """
@@ -147,7 +152,7 @@ def save400MostCom():
 	with open(dumpfile, 'w') as f:
 		pickle.dump(setofwords, f)
 
-def NMostComNgrams(dataset, n):
+def NMostComNgrams(dataset, n=2, N=100):
 	# n - the n-gram to consider
 	# dataset - dataframe of ['lyrics', 'genre']
 	lyrics_set = dataset['lyrics'].tolist()
@@ -155,6 +160,93 @@ def NMostComNgrams(dataset, n):
 
 	L = len(dataset)
 	ngrams = [defaultdict(float) for _ in range(num_genres)]
+
+	for i, song in enumerate(lyrics_set):
+		for line in song.split('\n'):
+			for ngram in nltk.ngrams(line.lower().split(), n):
+				ngrams[genres_set[i]][ngram] += 1./L
+
+	# sorting will create a new list of tuples
+	sorted_list = range(num_genres)		# empty list with num_genres elements needed
+	for i in range(num_genres):
+		sorted_list[i] = sorted(ngrams[i].items(), key=operator.itemgetter(1))[-N:]	# http://stackoverflow.com/questions/613183/sort-a-python-dictionary-by-value
+	return sorted_list
+
+# Setting up Regressive Imagery Dictionary stuff
+def regressiveID(song_string):
+	# Defining a new RID
+	# taken from https://github.com/jefftriplett/rid.py/blob/master/rid.py
+	# The different categories that can be judged are :
+	# PRIMARY - 
+	##	NEED: ORALITY, ANALITY, SEX 
+	##	SENSATION: TOUCH, TASTE, ODOR, GENERAL-SENSATION, SOUND, VISION, COLD, HARD, SOFT
+	##	DEFENSIVE SYMBOLIZATION: PASSIVITY, VOYAGE, RANDOM MOVEMENT, DIFFUSION, CHAOS
+	##	REGRESSIVE COGNITION: UNKNOWN, TIMELESSNESS, CONSCIOUSNESS ALTERATION, BRINK-PASSAGE, NARCISSISM, CONCRETENESS
+	##	ICARIAN IMAGERY: ASCENT, HEIGHT, DESCENT, DEPTH, FIRE, WATER
+	# SECONDARY - 
+	##	ABSTRACTION, SOCIAL BEHAVIOR, INSTRUMENTAL BEHAVIOR, RESTRAINT, ORDER, TEMPORAL REFERENCES, MORAL IMPERATIVE
+	# EMOTIONS - 
+	## 	POSITIVE AFFECT, ANXIETY, SADNESS, AFFECTION, AGGRESSION, EXPRESSIVE BEHAVIOR, GLORY
+
+	rid_dictionary = {
+						'PRIMARY':
+									{
+									'NEED': {'ORALITY':0, 'ANALITY':0, 'SEX':0},
+									'SENSATION': {'TOUCH':0, 'TASTE':0, 'ODOR':0, 'GENERAL-SENSATION':0, 'SOUND':0, 'VISION':0, 'COLD':0, 'HARD':0, 'SOFT':0},
+									'DEFENSIVE SYMBOLIZATION': {'PASSIVITY':0, 'VOYAGE':0, 'RANDOM MOVEMENT':0, 'DIFFUSION':0, 'CHAOS':0},
+									'REGRESSIVE COGNITION': {'UNKNOWN':0, 'TIMELESSNESS':0, 'CONSCIOUSNESS ALTERATION':0, 'BRINK-PASSAGE':0, 'NARCISSISM':0, 'CONCRETENESS':0},
+									'ICARIAN IMAGERY': {'ASCENT':0, 'HEIGHT':0, 'DESCENT':0, 'DEPTH':0, 'FIRE':0, 'WATER':0}
+									}, 
+
+						'SECONDARY':{
+										'ABSTRACTION':0, 'SOCIAL BEHAVIOR':0, 'INSTRUMENTAL BEHAVIOR':0, 'RESTRAINT':0, 'ORDER':0, 'TEMPORAL REFERENCES':0, 'MORAL IMPERATIVE':0
+									}, 
+						'EMOTIONS':{
+										'POSITIVE AFFECT':0, 'ANXIETY':0, 'SADNESS':0, 'AFFECTION':0, 'AGGRESSION':0, 'EXPRESSIVE BEHAVIOR':0, 'GLORY':0
+						}
+					}
+
+	ridict = rid.RegressiveImageryDictionary()
+	ridict.load_dictionary_from_string(rid.DEFAULT_RID_DICTIONARY)
+	ridict.load_exclusion_list_from_string(rid.DEFAULT_RID_EXCLUSION_LIST)
+	results = ridict.analyze(song_string)
+
+	# Need to get the values from 'results' easily
+	# referring to the source code
+	total_count = 0
+	for (category, count) in sorted(results.category_count.items(), key=lambda x: x[1], reverse=True):
+	    print "%-60s %5s" % (category.full_name(), count)
+	    print "    " + " ".join(results.category_words[category])
+	    total_count += count
+
+	# Summary for each top-level category
+	top_categories = ridict.category_tree.children.values()
+
+	def get_top_category(cat):
+	    for top_cat in top_categories:
+	        if cat.isa(top_cat):
+	            return top_cat
+	    # print "Category %s doesn't exist in %s" % (category, top_categories)
+	    return None		# In case there's no cateogory in the top_categories
+
+	top_category_counts = {}
+	for top_category in top_categories:
+	    top_category_counts[top_category] = 0
+
+	for category in results.category_count:
+	    top_category = get_top_category(category)
+	    if top_category:
+	        top_category_counts[top_category] += results.category_count[category]
+
+	def percent(x, y):
+	    if y == 0:
+	        return 0
+	    else:
+	        return (100.0 * x) / y
+	for top_category in top_categories:
+	    count = top_category_counts[top_category]
+	    print "%-20s: %f %%" % (top_category.full_name(), percent(count, total_count))
+
 
 ''' -----------------------------------------------------------------------------------------'''
 
@@ -180,8 +272,9 @@ def ngram(song, n = 2):
 	"""
 	ngs = defaultdict(float)
 	for line in song.split('\n'):
-		for ngram in nltk.ngrams(line.split(), n):
-			ngs[ngram] += 1./L
+		for ngram in nltk.ngrams(line.lower().split(), n):
+			ngs[ngram] += 1
+	return ngs
 
 def tupleify(dataset, twolists=False):
 	# converts a dataframe (2xN) to a list of tuples

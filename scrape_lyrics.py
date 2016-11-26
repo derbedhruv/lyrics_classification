@@ -8,7 +8,7 @@ import MySQLdb
 
 # global constants
 MIN_SONGS = 100	# minimum number of songs for artist to be considered
-MIN_LYRICS_CHARCOUNT = 50	# minimum character count for a song's lyrics to be considered
+MIN_LYRICS_CHARCOUNT = 100	# minimum character count for a song's lyrics to be considered
 
 # Now connect to the database - store credentials in ~/.my.cnf
 print 'will establish connection to db'
@@ -116,7 +116,7 @@ def extract_artist(alph, artist_page = 0, genres_considered=['Rock', 'Pop', 'Hip
 		        if not lyrics_div == None:
 		          lyric = lyrics_div.get_text()
 			  lyric = lyric.encode('utf-8')
-		          if len(lyric) >= MIN_LYRICS_CHARCOUNT:
+		          if (len(lyric) >= MIN_LYRICS_CHARCOUNT) and (lyric[:25] != 'We do not have the lyrics'):
 				  '''INSERTING THE LYRICS INTO THE DB'''
 				  db_cursor.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric, genre, song_url, artist_name, song_name))
 				  db.commit()
@@ -134,8 +134,8 @@ def extract_artist(alph, artist_page = 0, genres_considered=['Rock', 'Pop', 'Hip
 
 if __name__ == "__main__":
 	# alphabets_list = string.lowercase
-	alphabets_list = ['b']
+	alphabets_list = ['t']
 	for alph in alphabets_list:
 		# TODO: spawn a new thread for each call to extract_artist
-		extract_artist(alph, artist_page = 159, genres_considered = ['Pop'])
+		extract_artist(alph, artist_page = 19, genres_considered = ['Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk'])
 

@@ -78,9 +78,9 @@ if __name__ == "__main__":
 	# Pandas are a good choice
 	print 'Saving songs to csv file...',
 	final_songs = pd.DataFrame(songs_master_list, columns = ['lyrics', 'genre'])
-	f = open('songData-Nov25.csv', 'w')
-	final_songs.to_csv(f, index=False)
-	f.close()
+	with open('songData-Nov26.csv', 'w') as f:
+		final_songs.to_csv(f, index=False)
+	
 	print 'completed! Enjoy your new dataset. Number of songs per genre:'
 	for g in songs_by_genre.keys():
 		print g, ":", songs_by_genre[g]
