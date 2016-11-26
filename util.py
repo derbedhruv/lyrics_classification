@@ -88,9 +88,15 @@ def sentence_stats(song_string):
 
 	# reduce only to useful words..
 	topwords_only = [w for w in words if w in topwords]
+
+	# ADD FEATURES FOR TOP WORDS (BAG OF {selected} WORDS)
 	for tw in topwords:
 		# stats['count_' + tw] += topwords_only.count(tw)
 		stats.append(topwords_only.count(tw))
+
+	# ADD FEATURES FOR REGRESSIVE IMAGERY DICTIONARY
+	rid_features = regressiveID(song_string)
+	stats += rid_features
 
 	# return stats
 	# output = [stats[x] for x in stats.keys()]
