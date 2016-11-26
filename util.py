@@ -99,9 +99,10 @@ def sentence_stats(song_string, topwords):
 	# ADD FEATURES FOR TOP WORDS (BAG OF {selected} WORDS)
 	# reduce only to useful words..
 	topwords_only = [w for w in words if w in topwords]
-	for tw in topwords:
+	# for tw in topwords:
 		# stats['count_' + tw] += topwords_only.count(tw)
-		stats.append(topwords_only.count(tw))
+	#	stats.append(topwords_only.count(tw))
+	stats += [topwords_only.count(tw) for tw in topwords]
 
 	# TODO: Add the same for top ngrams
 
