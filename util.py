@@ -77,7 +77,7 @@ def sentence_stats(song_string):
 	stats.append(sum(len(w) for w in words)/len(words))
 
 	# next, get the number of occurences of top words
-	topwords_dump_filename = 'TopWords_' + filename()
+	topwords_dump_filename = 'TopWords_' + filename
 	with open(topwords_dump_filename) as f:
 		topwords = pickle.load(f)
 
@@ -135,7 +135,7 @@ def save100MostComPerGenre():
 
 # Find the most common 400 words of all genres
 def save400MostCom():
-	dataset = pandas.read_csv(get_filename())
+	dataset = pandas.read_csv(filename)
 	mostCommon200Words = NmostCom(dataset, 200)
 
 	# Now just make a set of all the distinct words
