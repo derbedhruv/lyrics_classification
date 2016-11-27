@@ -279,8 +279,11 @@ def run_model(cl):
 		NN = trainNeuralNet(X_train, y_train, X_test, y_test)
 	elif cl2 == 'baseline':
 		training_set = [(x,y) for x,y in zip(X_train, y_train)]
-		blC = classifiers.Baseline(training_set, range(10), debug=True)
+		blC = classifiers.Baseline(training_set, class_labels=range(10), debug=True)
+		blC.stochastic_grad_descent()
 		y_pred = numpy.array([blC.predict(x) for x in X_test])
+		print y_pred
+		print y_test
 		print(classification_report(y_test, y_pred))
 
 
