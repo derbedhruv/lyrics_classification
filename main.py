@@ -33,12 +33,13 @@ import re
 import util
 import numpy
 import pickle
+import classifiers
 
 logistic = LogisticRegression()
 
 # command line parameter variables
 valid_cli_args = ['-f', '-m']
-valid_models = ['log', 'rfc', 'nn']
+valid_models = ['log', 'rfc', 'nn', 'baseline']
 
 # We fix upon 10 broad genres
 genres = util.get_genres()
@@ -272,10 +273,16 @@ def run_model(cl):
 		logC = train_logistic(X_train, y_train, X_test, y_test)
 	elif cl2 == 'rfc':
 		print 'Training random forest classifier...'
-		logRFC = trainRandomForest(X_train, y_train, X_test, y_test)
+		RFC = trainRandomForest(X_train, y_train, X_test, y_test)
 	elif cl2 == 'nn':
 		print 'Training Neural Net...'
-		logRFC = trainNeuralNet(X_train, y_train, X_test, y_test)
+		NN = trainNeuralNet(X_train, y_train, X_test, y_test)
+	elif cls == 'baseline':
+		training_set = [(x,y) for x,y in zip(X_train, y_train)]
+		blC = classifiers.Baseline(training_set, range(10), debug=True)
+		y_pred = numpy.array([blC.predict(x) for x in X_test])
+		print(classification_report(y_test, y_pred))
+
 
 def command_line_syntax(custom_starting_message=None):
 	"""
