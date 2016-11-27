@@ -162,8 +162,9 @@ def feature_parse(data, option='bow'):
 		raise Exception('3-gram has not been implemented yet!')
 	return tokens
 
-def numerical_features(dataset):
+def numerical_features(dataset, n=3):
 	# Different methodology to extract features
+	# 'n' of the ngrams to be extracted
 	'''
 	for i, l in enumerate(dataset['lyrics'].tolist()):
 		X.append(util.sentence_stats(l))
@@ -183,8 +184,8 @@ def numerical_features(dataset):
 	# for i,l in enumerate(D_train):
 	#	X_train.append(util.sentence_stats(l, topwords))
 	print 'converting to vectors..',
-	X_train = [util.sentence_stats(l, ridict, topwords) for l in D_train]
-	X_test = [util.sentence_stats(l, ridict, topwords) for l in D_test]
+	X_train = [util.sentence_stats(l, ridict, topwords, topngrams, n) for l in D_train]
+	X_test = [util.sentence_stats(l, ridict, topwords, topngrams, n) for l in D_test]
 	print 'done!'
 
 	# for i,l in enumerate(D_test):
