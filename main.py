@@ -277,7 +277,7 @@ def run_model(cl):
 	elif cl2 == 'nn':
 		print 'Training Neural Net...'
 		NN = trainNeuralNet(X_train, y_train, X_test, y_test)
-	elif cls == 'baseline':
+	elif cl2 == 'baseline':
 		training_set = [(x,y) for x,y in zip(X_train, y_train)]
 		blC = classifiers.Baseline(training_set, range(10), debug=True)
 		y_pred = numpy.array([blC.predict(x) for x in X_test])
