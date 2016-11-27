@@ -77,7 +77,7 @@ class Baseline():
 			lossFunc = 0
 			for song in self.training_set:
 				# extract lyrics and genre label
-				song_lyric = song[0]
+				song_lyric = bag_of_words(song[0])
 				song_genre = song[1]
 
 				# pass these two to the cumulative loss function
@@ -85,7 +85,7 @@ class Baseline():
 
 				# choose random vector element and update the gradient for that
 				random_song = random.sample(self.training_set, 1)[0]		# returns a list of single tuple, need to extract that tuple
-				random_song_lyric = random_song[0]
+				random_song_lyric = bag_of_words(random_song[0])
 				random_song_genre = random_song[1]
 				increment_weight(random_song_lyric, random_song_genre)
 			if self.debug == True:

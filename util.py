@@ -213,7 +213,8 @@ def bag_of_words(song):
 	"""
 	bow = defaultdict(int)
 	song = song.split()
-	for word in song:
+	song_without_stopwords = [w for w in song if not w in stop_words]
+	for word in song_without_stopwords:
 		bow[word] += 1
 	return bow
 
