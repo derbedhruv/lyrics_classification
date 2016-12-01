@@ -114,5 +114,5 @@ model.fit(x_train, y_train, validation_data=(x_val, y_val),
           nb_epoch=2, batch_size=128)
 
 # Final evaluation of the model
-scores = model.evaluate(X_test, y_test, verbose=0)
+scores = model.evaluate(x_val, y_val, verbose=0)
 print("Accuracy: %.2f%%" % (scores[1]*100))
