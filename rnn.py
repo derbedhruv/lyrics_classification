@@ -25,7 +25,7 @@ VALIDATION_SPLIT = 0.2
 print('Indexing word vectors. NOTE: You should have the GloVe embeddings available locally. If not, download and unzip from http://nlp.stanford.edu/data/glove.6B.zip')
 
 embeddings_index = {}
-f = open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt'))
+f = open('glove.6B.100d.txt')
 for line in f:
     values = line.split()
     word = values[0]
