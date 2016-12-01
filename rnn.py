@@ -37,6 +37,7 @@ print('Found %s word vectors.' % len(embeddings_index))
 
 # second, prepare text samples and their labels
 print('Processing text dataset')
+labels_index = {'Jazz': 6, 'Christian': 8, 'Hip Hop/Rap': 2, 'R&B;': 3, 'Rock': 0, 'Pop': 1, 'Country': 5, 'Blues': 7, 'Electronic': 4, 'Folk': 9}	# dictionary mapping label name to numeric id
 dataset = pandas.read_csv("songData-Nov26.csv") 	# TODO: Change this to the training dataset only?
 texts = dataset["lyrics"].tolist()
 labels = dataset["genre"].tolist()
