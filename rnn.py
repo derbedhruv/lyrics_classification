@@ -14,7 +14,10 @@ from keras.layers import Dense, Input, Flatten
 from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.models import Model
 
+MAX_SEQUENCE_LENGTH = 1000
 MAX_NB_WORDS = 20000
+EMBEDDING_DIM = 100
+VALIDATION_SPLIT = 0.2
 
 dataset = pandas.read_csv("songData-Nov26.csv") 	# TODO: Change this to the training dataset only?
 texts = dataset["lyrics"].tolist()
