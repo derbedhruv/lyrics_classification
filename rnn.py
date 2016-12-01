@@ -48,3 +48,52 @@ x_train = data[:-nb_validation_samples]
 y_train = labels[:-nb_validation_samples]
 x_val = data[-nb_validation_samples:]
 y_val = labels[-nb_validation_samples:]
+
+print('Preparing embedding matrix.')
+
+# prepare embedding matrix
+nb_words = min(MAX_NB_WORDS, len(word_index))
+embedding_matrix = np.zeros((nb_words + 1, EMBEDDING_DIM))
+for word, i in word_index.items():
+    if i > MAX_NB_WORDS:
+        continue
+    embedding_vector = embeddings_index.get(word)
+    if embedding_vector is not None:
+        # words not found in embedding index will be all-zeros.
+        embedding_matrix[i] = embedding_vector
+
+# load pre-trained word embeddings into an Embedding layer
+# note that we set trainable = False so as to keep the embeddings fixed
+embedding_layer = Embedding(nb_words + 1,
+                            EMBEDDING_DIM,
+                            weights=[embedding_matrix],
+                            input_length=MAX_SEQUENCE_LENGTH,
+                            trainable=False)
+
+print('Training model.')
+
+# train a 1D convnet with global maxpooling
+sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
+embedded_sequences = embedding_layer(sequence_input)
+x = Conv1D(128, 5, activation='relu')(embedded_sequences)
+x = MaxPooling1D(5)(x)
+x = Conv1D(128, 5, activation='relu')(x)
+x = MaxPooling1D(5)(x)
+x = Conv1D(128, 5, activation='relu')(x)
+x = MaxPooling1D(35)(x)
+x = Flatten()(x)
+x = Dense(128, activation='relu')(x)
+preds = Dense(len(labels_index), activation='softmax')(x)
+
+model = Model(sequence_input, preds)
+model.compile(loss='categorical_crossentropy',
+              optimizer='rmsprop',
+              metrics=['acc'])
+
+# actuall fitting..
+model.fit(x_train, y_train, validation_data=(x_val, y_val),
+          nb_epoch=2, batch_size=128)
+
+# Final evaluation of the model
+scores = model.evaluate(X_test, y_test, verbose=0)
+print("Accuracy: %.2f%%" % (scores[1]*100))
