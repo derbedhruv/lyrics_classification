@@ -19,11 +19,26 @@ MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
 
+print('Indexing word vectors.')
+
+embeddings_index = {}
+f = open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt'))
+for line in f:
+    values = line.split()
+    word = values[0]
+    coefs = np.asarray(values[1:], dtype='float32')
+    embeddings_index[word] = coefs
+f.close()
+
+print('Found %s word vectors.' % len(embeddings_index))
+
+# second, prepare text samples and their labels
+print('Processing text dataset')
 dataset = pandas.read_csv("songData-Nov26.csv") 	# TODO: Change this to the training dataset only?
 texts = dataset["lyrics"].tolist()
 labels = dataset["genre"].tolist()
 
-# Next part is straight from Keras https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
+
 tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
 tokenizer.fit_on_texts(texts)
 sequences = tokenizer.texts_to_sequences(texts)
