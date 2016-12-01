@@ -18,7 +18,7 @@ MAX_NB_WORDS = 20000
 
 dataset = pandas.read_csv("songData-Nov26.csv") 	# TODO: Change this to the training dataset only?
 texts = dataset["lyrics"].tolist()
-labels = dataset["genres"].tolist()
+labels = dataset["genre"].tolist()
 
 # Next part is straight from Keras https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
 tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
