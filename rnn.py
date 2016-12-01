@@ -3,8 +3,11 @@
 # REF: https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification
 # REF: http://machinelearningmastery.com/sequence-classification-lstm-recurrent-neural-networks-python-keras/
 # REF: https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
+import os
+
 import numpy as np
 np.random.seed(1337)
+
 import pandas
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
