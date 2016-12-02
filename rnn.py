@@ -5,6 +5,7 @@
 # REF: https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
 import os
 import datetime
+import pickle
 
 import numpy as np
 np.random.seed(1337)
@@ -126,6 +127,7 @@ history = model.fit(x_train, y_train, validation_data=(x_val, y_val),
 
 # list all data in history
 print(history.history.keys())
+pickle.dump(history, open("history.pklz", "w"))
 
 # summarize history for accuracy
 plt.plot(history.history['acc'])
