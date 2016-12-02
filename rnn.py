@@ -140,7 +140,7 @@ from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 
 model = Sequential()
-model.add(embedded_sequences)
+model.add(sequence_input)
 model.add(LSTM(100))
 model.add(Dense(1, activation='sigmoid'))
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
