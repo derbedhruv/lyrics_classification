@@ -4,9 +4,14 @@
 # REF: http://machinelearningmastery.com/sequence-classification-lstm-recurrent-neural-networks-python-keras/
 # REF: https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
 import os
+import datetime
 
 import numpy as np
 np.random.seed(1337)
+import matplotlib
+# Force matplotlib to not use any Xwindows backend.
+matplotlib.use('Agg')   # http://stackoverflow.com/questions/29217543/why-does-this-solve-the-no-display-environment-issue-with-matplotlib
+import matplotlib.pyplot as plt
 
 import pandas
 from keras.preprocessing.text import Tokenizer
@@ -17,10 +22,15 @@ from keras.layers import Dense, Input, Flatten
 from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.models import Model
 
+# ------------------------------#
+#  HYPERPARAMETERS TO CONTROL!
+# ------------------------------#
 MAX_SEQUENCE_LENGTH = 1000
 MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
+NUM_EPOCHS = 1
+# ------------------------------#
 
 print('Indexing word vectors. NOTE: You should have the GloVe embeddings available locally. If not, download and unzip from http://nlp.stanford.edu/data/glove.6B.zip')
 
@@ -110,8 +120,42 @@ model.compile(loss='categorical_crossentropy',
               metrics=['acc'])
 
 # actuall fitting..
-model.fit(x_train, y_train, validation_data=(x_val, y_val),
-          nb_epoch=2, batch_size=128)
+# Will get history information http://machinelearningmastery.com/display-deep-learning-model-training-history-in-keras/
+history = model.fit(x_train, y_train, validation_data=(x_val, y_val),
+          nb_epoch=NUM_EPOCHS, batch_size=128)
+
+# list all data in history
+print(history.history.keys())
+
+# summarize history for accuracy
+plt.plot(history.history['acc'])
+plt.plot(history.history['val_acc'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+
+# ----------------------------------------------------- #
+# SAVE FIGURE BASED ON DATE TIME FOR RECORDS
+# ----------------------------------------------------- #
+now = datetime.datetime.now()
+figname = "accuracy_plot_" + str(now.year) + str(now.month) + str(now.day) + "_" + str(now.hour) + str(now.minute) + "hrs.png"
+plt.savefig(figname)
+# ----------------------------------------------------- #
+
+# summarize history for loss
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+# ----------------------------------------------------- #
+# SAVE FIGURE BASED ON DATE TIME FOR RECORDS
+# ----------------------------------------------------- #
+figname = "loss_history_plot_" + str(now.year) + str(now.month) + str(now.day) + "_" + str(now.hour) + str(now.minute) + "hrs.png"
+plt.savefig(figname)
+# ----------------------------------------------------- #
 
 # Final evaluation of the model
 scores = model.evaluate(x_val, y_val, verbose=0)
