@@ -33,21 +33,7 @@ VALIDATION_SPLIT = 0.2
 NUM_EPOCHS = 4
 # ------------------------------#
 
-print('Indexing word vectors. NOTE: You should have the GloVe embeddings available locally. If not, download and unzip from http://nlp.stanford.edu/data/glove.6B.zip')
-
-embeddings_index = {}
-f = open('glove.6B.100d.txt')
-for line in f:
-    values = line.split()
-    word = values[0]
-    coefs = np.asarray(values[1:], dtype='float32')
-    embeddings_index[word] = coefs
-
-f.close()
-
-print('Found %s word vectors.' % len(embeddings_index))
-
-# second, prepare text samples and their labels
+# prepare text samples and their labels
 print('Processing text dataset')
 labels_index = {'Jazz': 6, 'Christian': 8, 'Hip Hop/Rap': 2, 'R&B;': 3, 'Rock': 0, 'Pop': 1, 'Country': 5, 'Blues': 7, 'Electronic': 4, 'Folk': 9}	# dictionary mapping label name to numeric id
 dataset = pandas.read_csv("songData-Nov26.csv") 	# TODO: Change this to the training dataset only?
@@ -80,9 +66,26 @@ y_train = labels[:-nb_validation_samples]
 x_val = data[-nb_validation_samples:]
 y_val = labels[-nb_validation_samples:]
 
-print('Preparing embedding matrix.')
+# ----------------------------------------------------- #
+# GloVe STUFF
+# ----------------------------------------------------- #
+print('Indexing word vectors. NOTE: You should have the GloVe embeddings available locally. If not, download and unzip from http://nlp.stanford.edu/data/glove.6B.zip')
+
+embeddings_index = {}
+f = open('glove.6B.100d.txt')
+for line in f:
+    values = line.split()
+    word = values[0]
+    coefs = np.asarray(values[1:], dtype='float32')
+    embeddings_index[word] = coefs
+
+f.close()
+
+print('Found %s word vectors.' % len(embeddings_index))
 
 # prepare embedding matrix
+print('Preparing embedding matrix.')
+
 nb_words = min(MAX_NB_WORDS, len(word_index))
 embedding_matrix = np.zeros((nb_words + 1, EMBEDDING_DIM))
 for word, i in word_index.items():
@@ -100,15 +103,15 @@ embedding_layer = Embedding(nb_words + 1,
                             weights=[embedding_matrix],
                             input_length=MAX_SEQUENCE_LENGTH,
                             trainable=False)
+# ----------------------------------------------------- #
+
 
 print('Training model.')
-
-sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
-embedded_sequences = embedding_layer(sequence_input)
-
 # ----------------------------------------------------- #
 # TRAINING A CONV NET
 # ----------------------------------------------------- #
+sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
+embedded_sequences = embedding_layer(sequence_input)
 '''
 # train a 1D convnet with global maxpooling
 x = Conv1D(128, 5, activation='relu')(embedded_sequences)
@@ -133,20 +136,17 @@ model.compile(
 # ----------------------------------------------------- #
 # TRAINING AN LSTM RECURRENT NEURAL NET
 # ----------------------------------------------------- #
-from keras.models import Sequential
-from keras.layers import Dense
 from keras.layers import LSTM
-from keras.layers.embeddings import Embedding
-from keras.preprocessing import sequence
 
-embedding_vecor_length = 32
-model = Sequential()
-model.add(Embedding(MAX_NB_WORDS, embedding_vecor_length, input_length=MAX_SEQUENCE_LENGTH))
-model.add(LSTM(100))
-model.add(Dense(1, activation='sigmoid'))
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-print(model.summary())
-# model.fit(X_train, y_train, nb_epoch=3, batch_size=64)
+x = LSTM(100)(embedded_sequences)
+x = Dense(1, activation='sigmoid')(x)
+preds = Dense(len(labels_index), activation='softmax')(x)
+
+model = Model(sequence_input, preds)
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
+
+# print(model.summary())
+# model.fit(X_train, y_train, nb_epoch=3, batch_size=64)   # <------- TRY VARYING BATCH SIZE?
 
 # ----------------------------------------------------- #
 
