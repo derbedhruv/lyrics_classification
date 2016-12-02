@@ -133,6 +133,7 @@ pickle.dump(history.history['acc'], open("history_acc.pklz", "w"))
 pickle.dump(history.history['loss'], open("history_loss.pklz", "w"))
 
 # summarize history for accuracy
+plt.figure(0)   # to seperate figures
 plt.plot(history.history['acc'])
 plt.plot(history.history['val_acc'])
 plt.title('model accuracy')
@@ -149,6 +150,7 @@ plt.savefig(figname)
 # ----------------------------------------------------- #
 
 # summarize history for loss
+plt.figure(1)   # to seperate figures
 plt.plot(history.history['loss'])
 plt.plot(history.history['val_loss'])
 plt.title('model loss')
