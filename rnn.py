@@ -30,7 +30,7 @@ MAX_SEQUENCE_LENGTH = 1000      # maximum number of words in a sequence
 MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
-NUM_EPOCHS = 1
+NUM_EPOCHS = 4
 # ------------------------------#
 
 print('Indexing word vectors. NOTE: You should have the GloVe embeddings available locally. If not, download and unzip from http://nlp.stanford.edu/data/glove.6B.zip')
@@ -42,6 +42,7 @@ for line in f:
     word = values[0]
     coefs = np.asarray(values[1:], dtype='float32')
     embeddings_index[word] = coefs
+
 f.close()
 
 print('Found %s word vectors.' % len(embeddings_index))
@@ -116,18 +117,20 @@ x = Dense(128, activation='relu')(x)
 preds = Dense(len(labels_index), activation='softmax')(x)
 
 model = Model(sequence_input, preds)
-model.compile(loss='categorical_crossentropy',
-              optimizer='rmsprop',
-              metrics=['acc'])
+model.compile(
+    loss='categorical_crossentropy',
+    optimizer='rmsprop',
+    metrics=['acc']
+)
 
 # actuall fitting..
 # Will get history information http://machinelearningmastery.com/display-deep-learning-model-training-history-in-keras/
-history = model.fit(x_train, y_train, validation_data=(x_val, y_val),
-          nb_epoch=NUM_EPOCHS, batch_size=128)
+history = model.fit(x_train, y_train, validation_data=(x_val, y_val), nb_epoch=NUM_EPOCHS, batch_size=128)
 
 # list all data in history
 print(history.history.keys())
-pickle.dump(history.history['acc'], open("history.pklz", "w"))
+pickle.dump(history.history['acc'], open("history_acc.pklz", "w"))
+pickle.dump(history.history['loss'], open("history_loss.pklz", "w"))
 
 # summarize history for accuracy
 plt.plot(history.history['acc'])
