@@ -27,7 +27,7 @@ from keras.models import Model
 #  HYPERPARAMETERS TO CONTROL!
 # ------------------------------#
 MAX_SEQUENCE_LENGTH = 1000      # maximum number of words in a sequence
-MAX_NB_WORDS = 20000
+MAX_NB_WORDS = 20000            # top MAX_NB_WORDS most common words will be used
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
 NUM_EPOCHS = 4
@@ -103,9 +103,14 @@ embedding_layer = Embedding(nb_words + 1,
 
 print('Training model.')
 
-# train a 1D convnet with global maxpooling
 sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
 embedded_sequences = embedding_layer(sequence_input)
+
+# ----------------------------------------------------- #
+# TRAINING A CONV NET
+# ----------------------------------------------------- #
+'''
+# train a 1D convnet with global maxpooling
 x = Conv1D(128, 5, activation='relu')(embedded_sequences)
 x = MaxPooling1D(5)(x)
 x = Conv1D(128, 5, activation='relu')(x)
@@ -122,6 +127,28 @@ model.compile(
     optimizer='rmsprop',
     metrics=['acc']
 )
+'''
+# ----------------------------------------------------- #
+
+# ----------------------------------------------------- #
+# TRAINING AN LSTM RECURRENT NEURAL NET
+# ----------------------------------------------------- #
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers.embeddings import Embedding
+from keras.preprocessing import sequence
+
+model = Sequential()
+model.add(embedded_sequences)
+model.add(LSTM(100))
+model.add(Dense(1, activation='sigmoid'))
+model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+print(model.summary())
+# model.fit(X_train, y_train, nb_epoch=3, batch_size=64)
+
+# ----------------------------------------------------- #
+
 
 # actuall fitting..
 # Will get history information http://machinelearningmastery.com/display-deep-learning-model-training-history-in-keras/
