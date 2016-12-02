@@ -26,7 +26,7 @@ from keras.models import Model
 # ------------------------------#
 #  HYPERPARAMETERS TO CONTROL!
 # ------------------------------#
-MAX_SEQUENCE_LENGTH = 1000
+MAX_SEQUENCE_LENGTH = 1000      # maximum number of words in a sequence
 MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
@@ -127,7 +127,7 @@ history = model.fit(x_train, y_train, validation_data=(x_val, y_val),
 
 # list all data in history
 print(history.history.keys())
-pickle.dump(history, open("history.pklz", "w"))
+pickle.dump(history.history['acc'], open("history.pklz", "w"))
 
 # summarize history for accuracy
 plt.plot(history.history['acc'])
