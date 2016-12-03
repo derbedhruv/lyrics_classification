@@ -3,7 +3,7 @@
 # REF: https://keras.io/datasets/#imdb-movie-reviews-sentiment-classification
 # REF: http://machinelearningmastery.com/sequence-classification-lstm-recurrent-neural-networks-python-keras/
 # REF: https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
-import os
+import os, re
 import datetime
 import pickle
 
@@ -23,11 +23,13 @@ from keras.layers import Dense, Input, Flatten
 from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.models import Model
 
+from sklearn.metrics import classification_report
+
 # ------------------------------#
 #  HYPERPARAMETERS TO CONTROL!
 # ------------------------------#
 MAX_SEQUENCE_LENGTH = 1000      # maximum number of words in a sequence
-MAX_NB_WORDS = 20000            # top MAX_NB_WORDS most common words will be used
+MAX_NB_WORDS = 10000            # top MAX_NB_WORDS most common words will be used
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
 NUM_EPOCHS = 4
@@ -40,6 +42,10 @@ dataset = pandas.read_csv("songData-Nov26.csv") 	# TODO: Change this to the trai
 texts = dataset["lyrics"].tolist()
 labels = dataset["genre"].tolist()
 
+# remove useless characters and convert to lowercase
+print "processing text to remove useless chars..."
+texts = [re.sub(r"[^\s\w_]+", '', t.lower().replace('\n', ' ')) for t in texts]
+print "done!"
 
 tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
 tokenizer.fit_on_texts(texts)
@@ -65,6 +71,17 @@ x_train = data[:-nb_validation_samples]
 y_train = labels[:-nb_validation_samples]
 x_val = data[-nb_validation_samples:]
 y_val = labels[-nb_validation_samples:]
+
+# ----------------------------------------------------- #
+# USE THIS TO SHORTEN THE DATASET FOR QUICK EXPERIMENTS #
+# ----------------------------------------------------- #
+'''
+x_train = x_train[:1000]
+y_train = y_train[:1000]
+x_val = x_val[:50]
+y_val = y_val[:50]
+'''
+# ----------------------------------------------------- #
 
 # ----------------------------------------------------- #
 # GloVe STUFF
@@ -112,9 +129,9 @@ print('Training model.')
 # ----------------------------------------------------- #
 sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
 embedded_sequences = embedding_layer(sequence_input)
-'''
+
 # train a 1D convnet with global maxpooling
-x = Conv1D(128, 5, activation='relu')(embedded_sequences)
+x = Conv1D(32, 5, activation='relu')(embedded_sequences)
 x = MaxPooling1D(5)(x)
 x = Conv1D(128, 5, activation='relu')(x)
 x = MaxPooling1D(5)(x)
@@ -130,12 +147,13 @@ model.compile(
     optimizer='rmsprop',
     metrics=['acc']
 )
-'''
+
 # ----------------------------------------------------- #
 
 # ----------------------------------------------------- #
 # TRAINING AN LSTM RECURRENT NEURAL NET
 # ----------------------------------------------------- #
+'''
 from keras.layers import LSTM
 
 x = LSTM(100)(embedded_sequences)
@@ -147,7 +165,7 @@ model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc']
 
 # print(model.summary())
 # model.fit(X_train, y_train, nb_epoch=3, batch_size=64)   # <------- TRY VARYING BATCH SIZE?
-
+'''
 # ----------------------------------------------------- #
 
 
@@ -195,3 +213,12 @@ plt.savefig(figname)
 # Final evaluation of the model
 scores = model.evaluate(x_val, y_val, verbose=0)
 print("Accuracy: %.2f%%" % (scores[1]*100))
+print "model precision and recall analysis for each genre->"
+
+# calculate the prediction on the test set
+y_pred = model.predict(x_val)
+# will round the values to 0 or 1 with threshold 0.5 --- TODO: select better threshold using ROC curve?
+# y_pred = np.matrix.round(y_pred) 
+y_pred = np.argmax(y_pred, axis=1)
+y_true = np.argmax(y_val, axis=1)
+print classification_report(y_true, y_pred)
