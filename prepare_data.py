@@ -7,6 +7,7 @@ import collections
 from sklearn.model_selection import train_test_split
 
 genres_list = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+better_oracle_genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Country', 'Jazz', 'Blues', 'Christian']
 accepted_characters = set('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\',.\n\r ')
 SONG_LIMIT_PER_GENRE = 10000	# not taking more than these per genre to have a homogenous mix of training data
 
@@ -49,7 +50,7 @@ def create_train_test(dataset):
 
 if __name__ == "__main__":
 	# read in the songs, straight from the db
-	data = get_data()
+	data = get_data(genres=better_oracle_genres)
 
 	# convert them into lists
 	all_lyrics = data['lyrics'].tolist()
@@ -78,7 +79,7 @@ if __name__ == "__main__":
 	# Pandas are a good choice
 	print 'Saving songs to csv file...',
 	final_songs = pd.DataFrame(songs_master_list, columns = ['lyrics', 'genre'])
-	with open('songData-Nov26.csv', 'w') as f:
+	with open('songData-Dec3.csv', 'w') as f:
 		final_songs.to_csv(f, index=False)
 	
 	print 'completed! Enjoy your new dataset. Number of songs per genre:'

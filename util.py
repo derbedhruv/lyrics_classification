@@ -17,8 +17,9 @@ stop_words = get_stop_words('en')
 
 # default values for important stuff
 ### ------------------------------------------------------------------------------------------####
-filename = 'songData-Nov26.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
-genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']
+filename = 'songData-Dec3.csv'	# <------- ONLY CHANGE THIS, THE REST ARE DERIVED FROM IT
+# old one with all the 10-genre data is Nov26 one
+genres = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Country', 'Jazz', 'Blues', 'Christian']
 ### ------------------------------------------------------------------------------------------####
 
 num_genres = len(genres)
