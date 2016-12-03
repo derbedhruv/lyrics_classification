@@ -21,19 +21,28 @@ import MySQLdb
 from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
+
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
+
 from textblob import TextBlob
 import pandas as pd
 import re
-import util
 import numpy
 import pickle
+
+### ------------------------------------------------------------------------------------------####
+# custom Modules 																			  ####
+### ------------------------------------------------------------------------------------------####
+import util
 import classifiers
+### ------------------------------------------------------------------------------------------####
 
 logistic = LogisticRegression()
 
@@ -54,7 +63,7 @@ genres = util.get_genres()
 
 
 ### ------------------------------------------------------------------------------------------####
-""" MODEL FUNCTIONS """
+### MODEL FUNCTIONS 
 ### ------------------------------------------------------------------------------------------####
 
 def train_logistic(X_train, y_train, X_test, y_test):
@@ -143,7 +152,7 @@ def trainNeuralNet(X_train, y_train, X_test, y_test):
 
 
 ### ------------------------------------------------------------------------------------------####
-""" FEATURE EXTRACTION FUNCTIONS """
+### FEATURE EXTRACTION FUNCTIONS
 ### ------------------------------------------------------------------------------------------####
 
 # convert to a format that the algo can use
@@ -239,7 +248,7 @@ def get_features(dataset, max_features=3000, tokenizer=feature_parse):
 	return (X_train, y_train, X_test, y_test)
 
 ### ------------------------------------------------------------------------------------------####
-""" MODEL RUNNING AND COMMAND LINE PARSING FUNCTIONS """
+### MODEL RUNNING AND COMMAND LINE PARSING FUNCTIONS
 ### ------------------------------------------------------------------------------------------####
 
 def run_model(cl):
@@ -282,9 +291,10 @@ def run_model(cl):
 		blC = classifiers.Baseline(training_set, class_labels=range(10), debug=True)
 		blC.stochastic_grad_descent()
 		y_pred = numpy.array([blC.predict(x) for x in X_test])
-		print y_pred
-		print y_test
-		print(classification_report(y_test, y_pred))
+		# print y_pred
+		# print y_test
+		print classification_report(y_test, y_pred)
+		print "accuracy score =", accuracy_score(y_test, y_pred)
 
 
 def command_line_syntax(custom_starting_message=None):

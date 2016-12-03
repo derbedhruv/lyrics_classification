@@ -76,6 +76,9 @@ def sentence_stats(song_string, ridict, topwords, topngrams, n):
 	sentences = song_string.split('\n')
 	words = song_string.split()
 
+	### get rid of non-alphanumeric chars
+	words = [re.sub(r"[^\s\w_]+", '', w) for w in words]
+
 	stats = []
 	# important numerical features
 	stats.append(song_string.count('\n\n'))
