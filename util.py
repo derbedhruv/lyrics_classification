@@ -11,6 +11,7 @@ import operator
 import nltk
 from stop_words import get_stop_words	# https://pypi.python.org/pypi/stop-words
 import rid 	# https://github.com/jefftriplett/rid.py
+import re
 
 stop_words = get_stop_words('en')
 

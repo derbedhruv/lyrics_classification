@@ -131,7 +131,8 @@ def trainRandomForest(X_train, y_train, X_test, y_test):
 	forest = forest.fit(X=X_train, y=y_train)
 
 	y_pred = forest.predict(X_test)
-	print(classification_report(y_test, y_pred))
+	print classification_report(y_test, y_pred)
+	print "accuracy:", accuracy_score(y_test, y_pred)
 
 	return forest 
 
