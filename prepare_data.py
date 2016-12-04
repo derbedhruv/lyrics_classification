@@ -47,6 +47,18 @@ def create_train_test(dataset):
 	train, test = train_test_split(dataset, test_size = 0.2)
 	return (train, test)
 
+def create_corpus_for_glove(dataset, frac=0.7):
+	# will take a random 70% sample of a dataset (or whatever fraction you supply as 'frac')
+	# and concatenate each and every song into one huge corpus
+	# it will also remove text characters and non-spaces and non-alphabets 
+	# will also convert everything to lowercase
+	# ideally you want to save this to a file and then run ./demo.sh to train GloVe vectors on it
+	import random
+	text = dataset['lyrics'].tolist()
+	rtextsample = random.sample(text, int(frac*len(text)))
+	textcorpus = ' '.join([re.sub(r"[^\s\w]|\d", '', t.lower().replace('\n', ' ')) for t in rtextsample])
+	return textcorpus
+
 
 if __name__ == "__main__":
 	# read in the songs, straight from the db

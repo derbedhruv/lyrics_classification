@@ -126,7 +126,8 @@ embedding_layer = Embedding(nb_words + 1,
 
 print('Training model.')
 # ----------------------------------------------------- #
-# TRAINING A CONV NET
+# TRAINING A CONV NEURAL NET
+# https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
 # ----------------------------------------------------- #
 sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
 embedded_sequences = embedding_layer(sequence_input)
@@ -153,6 +154,7 @@ model.compile(
 
 # ----------------------------------------------------- #
 # TRAINING AN LSTM RECURRENT NEURAL NET
+# http://machinelearningmastery.com/sequence-classification-lstm-recurrent-neural-networks-python-keras/
 # ----------------------------------------------------- #
 '''
 from keras.layers import LSTM
