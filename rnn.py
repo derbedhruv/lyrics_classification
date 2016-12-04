@@ -30,7 +30,7 @@ from sklearn.metrics import classification_report
 # ------------------------------#
 MAX_SEQUENCE_LENGTH = 1000      # maximum number of words in a sequence
 MAX_NB_WORDS = 10000            # top MAX_NB_WORDS most common words will be used
-EMBEDDING_DIM = 100
+EMBEDDING_DIM = 50
 VALIDATION_SPLIT = 0.2
 NUM_EPOCHS = 4
 # ------------------------------#
@@ -90,7 +90,7 @@ y_val = y_val[:50]
 print('Indexing word vectors. NOTE: You should have the GloVe embeddings available locally. If not, download and unzip from http://nlp.stanford.edu/data/glove.6B.zip')
 
 embeddings_index = {}
-f = open('glove.6B.100d.txt')
+f = open('glove.custom.70percentLyricsCorpus.Dec3.txt')     # custom made GloVe representation capturing the semantics of lyrics corpus
 for line in f:
     values = line.split()
     word = values[0]
