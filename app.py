@@ -10,7 +10,7 @@ def index():
 @app.route('/process-lyrics', methods=['GET', 'POST'])
 def process_lyrics():
 	# lyrics = request.form['lyrix']
-	# print lyrics
+	print "LYRICS:", request.form['lyrics']
 	return 'OK'
 
 if __name__ == "__main__":

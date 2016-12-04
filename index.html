@@ -32,7 +32,9 @@ $("#lyrics_form").submit(function (e){
 })
 
 function processLyrics() {
-	console.log($("#lyrix").val());
+	var user_lyrics = $("#lyrix").val();
+	console.log(user_lyrics);
+	$.post( "/process-lyrics", { lyrics: user_lyrics } );		// https://api.jquery.com/jquery.post/
 }
 
 </script>
