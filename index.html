@@ -49,6 +49,34 @@ $("#lyrics_form").submit(function (e){
 	processLyrics();
 })
 
+// a lookup table for genres
+var genre = {
+  "0": function() {
+    return "Rock";
+  },
+  "1": function() {
+    return "Pop";
+  },
+  "2":  function() {
+    return "Hip Hop/Rap";
+  },
+  "3": function() {
+    return "R&B";
+  },
+  "4": function() {
+    return "Country";
+  },
+  "5": function() {
+    return "Jazz";
+  },
+  "6": function() {
+    return "Blues";
+  },
+  "7": function() {
+    return "Christian";
+  },
+};
+
 function processLyrics() {
 	var user_lyrics = $("#lyrix").val();
 	// console.log(user_lyrics);
@@ -62,7 +90,7 @@ function processLyrics() {
 		var probabilities = data.probabilities
 
 		// console.log(probabilities)
-		$('#prediction').append(predicted_genre)
+		$('#prediction').append(genre[predicted_genre]())
 
 		// write to the table
 		var new_row = '<tr>';
