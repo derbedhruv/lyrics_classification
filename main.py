@@ -188,7 +188,7 @@ def numerical_features(dataset, n=3):
 	# Then extract most popular words and n-grams from the training set ONLY
 	print 'generating topwords and topngrams..',
 	topwords = util.NmostComWords(D_train, y_train)
-	topngrams = util.NMostComNgrams(D_train, y_train)
+	topngrams = util.NMostComNgrams(D_train, y_train, n)
 	print 'done!'
 
 	# convert to design matrices
@@ -208,7 +208,10 @@ def numerical_features(dataset, n=3):
 	X_test = numpy.array(X_test)
 	y_test = numpy.array(y_test)
 
-	return (X_train, y_train, X_test, y_test)
+	# return everything that you would need to keep constant
+	# the topwords and topngrams should be saved for making future predictions...
+	return (X_train, y_train, X_test, y_test, topwords, topngrams)
+	# return (X_train, y_train, X_test, y_test)
 
 
 def get_features(dataset, max_features=3000, tokenizer=feature_parse):
