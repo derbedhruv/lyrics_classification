@@ -3,14 +3,14 @@
 Author: Dhruv Joshi
 
 The purpose of this course mini-project is to build an NLP system for the classification of songs based only on their lyrical content. Ten genres have been selected: 
-`genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk']`
+`genre_labels = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Country', 'Jazz', 'Blues', 'Christian']`
 
 Commits will be pushed to this repo throughout November and December 2016. Thereafter, this may evolve into an audio-based music recommendation system in tandem.
 
 # Data
-The lyrics were scraped from [songlyrics.com](http://songlyrics.com), artists A-C with artists having more than 25 songs each, and for which Genre was not NULL. 81940 songs were scraped in total.
+The lyrics were scraped from [songlyrics.com](http://songlyrics.com), artists A-C with artists having more than 25 songs each, and for which Genre was not NULL. 81940 songs were scraped in total. After cleaning and removing unusable songs, there are 58061 song lyrics in the corpus.
 
-The baseline results are as follows (stochastic gradient descent with hinge loss, trained on 65552 songs and tested on 16388 songs)
+The latest results are as follows (Random Forest Classifier, trained on 46448 songs and tested on 11613 songs)
 
 | Genre       	| Precision       	| Recall         	|
 |-------------	|-----------------	|----------------	|
