@@ -15,9 +15,9 @@ The latest results are as follows (Random Forest Classifier, trained on 46448 so
 | Genre       	| Precision       	| Recall         	|
 |-------------	|-----------------	|----------------	|
 | Rock        	| 0.47  			| 0.72 				|
-| Hip Hop/Rap 	| 0.57  			| 0.39 				|
-| R&B       	| 0.76  			| 0.76 				|
-| Pop         	| 0.53 			 	| 0.48 				|
+| Pop			| 0.57  			| 0.39 				|
+| Hip Hop/Rap   | 0.76  			| 0.76 				|
+| R&B         	| 0.53 			 	| 0.48 				|
 | Country     	| 0.45  			| 0.57 				|
 | Jazz        	| 0.60   			| 0.38 				|
 | Blues       	| 0.75  			| 0.43 				|

@@ -20,6 +20,19 @@
 		</div>
 		<button type="submit" class="btn btn-default">Process!</button>
 	  </form>
+	  <div id="prediction">
+	  	Predicted genre for this song:
+	  </div>
+	  <table class="table table-bordered">
+	  	<th>Rock</th>
+	  	<th>Pop</th>
+	  	<th>Rock</th>
+	  	<th>Rock</th>
+	  	<th>Rock</th>
+	  	<th>Rock</th>
+	  	<th>Rock</th>
+	  	<th>Rock</th>
+	  </table>
 	</div>
 </body>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"
@@ -37,7 +50,14 @@ function processLyrics() {
 	// https://api.jquery.com/jquery.post/
 	$.post( "/process-lyrics", { lyrics: user_lyrics } , function(data) {
 		// generate a table showing probabilities of different genres, RID and others
-		console.log(data);
+		// console.log(data.prediction);
+		var predicted_genre = data.prediction
+		var topngrams = data.topngrams
+		var topwords = data.topwords
+		var probabilities = data.probabilities
+
+		// console.log(probabilities)
+		$('#prediction').append(predicted_genre)
 	});
 }
 
