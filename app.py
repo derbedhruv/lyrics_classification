@@ -48,10 +48,11 @@ def process_lyrics():
 	prediction = RFC.predict_proba(song_vector)[0].tolist()
 
 	# append to the dictionary
-	processed['classification'] = prediction
+	processed['probabilities'] = prediction
 	processed['stats'] = song_vector[:5]	# send the first 5 of the features - these are the sentence stats
 	processed['topwords'] = topwords_present
 	processed['topngrams'] = topngrams_present
+	processed['prediction'] = RFC.predict(song_vector).tolist()[0]
 
 	# return json version of dictionary to requester
 	# http://stackoverflow.com/questions/13081532/how-to-return-json-using-flask-web-framework
