@@ -26,7 +26,8 @@ def process_lyrics():
 
 	# RID processing
 	ridict = util.setupRID()	# create new RID
-	# processed['rid'] = ridict.analyze(lyrics)
+	processed['rid'] = [(category.full_name(), count) for (category, count) in ridict.analyze(lyrics).category_count.items()]
+	print processed['rid']
 
 	# convert to vector
 	# load the topwords and topngrams
@@ -44,15 +45,13 @@ def process_lyrics():
 	# http://stackoverflow.com/questions/23000693/how-to-output-randomforest-classifier-from-python
 	RFC = joblib.load('rfc-cs221-poster.pklz')
 	# prediction = RFC.predict_proba(song_vector.reshape(1, -1))[0].tolist()
-	prediction = RFC.predict_proba(song_vector).tolist()
+	prediction = RFC.predict_proba(song_vector)[0].tolist()
 
 	# append to the dictionary
 	processed['classification'] = prediction
 	processed['stats'] = song_vector[:5]	# send the first 5 of the features - these are the sentence stats
 	processed['topwords'] = topwords_present
 	processed['topngrams'] = topngrams_present
-
-	print processed
 
 	# return json version of dictionary to requester
 	# http://stackoverflow.com/questions/13081532/how-to-return-json-using-flask-web-framework
