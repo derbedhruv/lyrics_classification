@@ -23,16 +23,21 @@
 	  <div id="prediction">
 	  	Predicted genre for this song:
 	  </div>
-	  <table class="table table-bordered">
-	  	<th>Rock</th>
-	  	<th>Pop</th>
-	  	<th>Rock</th>
-	  	<th>Rock</th>
-	  	<th>Rock</th>
-	  	<th>Rock</th>
-	  	<th>Rock</th>
-	  	<th>Rock</th>
-	  </table>
+	  <div style="padding:10px">
+	  	Probabilities of each genre:
+		  <table class="table table-bordered" id='gprobs'>
+		  	<tr>
+			  	<th>Rock</th>
+			  	<th>Pop</th>
+			  	<th>Hop Hop/Rap</th>
+			  	<th>R&B</th>
+			  	<th>Country</th>
+			  	<th>Jazz</th>
+			  	<th>Blues</th>
+			  	<th>Christian</th>
+			 </tr>
+		  </table>
+		</div>
 	</div>
 </body>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"
@@ -58,6 +63,14 @@ function processLyrics() {
 
 		// console.log(probabilities)
 		$('#prediction').append(predicted_genre)
+
+		// write to the table
+		var new_row = '<tr>';
+		for (i=0; i<8; i++) {
+			new_row += '<td>' + probabilities[i] + '</td>'
+		}
+		new_row += '</tr>';
+		$('#gprobs').append(new_row)
 	});
 }
 
