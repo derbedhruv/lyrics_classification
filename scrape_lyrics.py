@@ -5,15 +5,17 @@ from bs4 import BeautifulSoup
 import string
 from collections import defaultdict
 import MySQLdb
+import re
 
 # global constants
-MIN_SONGS = 100	# minimum number of songs for artist to be considered
-MIN_LYRICS_CHARCOUNT = 100	# minimum character count for a song's lyrics to be considered
+MIN_SONGS = 500	# minimum number of songs for artist to be considered
+MIN_LYRICS_CHARCOUNT = 200	# minimum character count for a song's lyrics to be considered
 
 # Now connect to the database - store credentials in ~/.my.cnf
-print 'will establish connection to db'
+print 'will establish connection to db...',
 db = MySQLdb.connect(host="localhost", db="cs221_nlp", read_default_file='~/.my.cnf')
 db_cursor = db.cursor()
+print 'done!'
 
 # scrape the whole website slowly
 
@@ -111,11 +113,15 @@ def extract_artist(alph, artist_page = 0, genres_considered=['Rock', 'Pop', 'Hip
 		        song_name = song_name.encode('utf-8')
 		        song_request = requests.get(song_url)
 		        song_lyrics = BeautifulSoup(song_request.text, "html.parser")
+			if song_lyrics.img == None:
+			  continue
 		        img = song_lyrics.img.extract()
 		        lyrics_div = song_lyrics.find("p", { "id" : "songLyricsDiv" })
 		        if not lyrics_div == None:
 		          lyric = lyrics_div.get_text()
 			  lyric = lyric.encode('utf-8')
+			  # now we edit out crap from the lyrics
+			  lyric = re.sub(r"[^\s\w_]+", '', lyric.lower().replace('\n', ' '))
 		          if (len(lyric) >= MIN_LYRICS_CHARCOUNT) and (lyric[:25] != 'We do not have the lyrics'):
 				  '''INSERTING THE LYRICS INTO THE DB'''
 				  db_cursor.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric, genre, song_url, artist_name, song_name))
@@ -132,10 +138,73 @@ def extract_artist(alph, artist_page = 0, genres_considered=['Rock', 'Pop', 'Hip
 	for g in genres:
 	  print g, ':', genres[g]
 
+def grab_lyrics_artist(artist_link, num_songs_for_artist, artist_name, genre):
+  print 'Processing music for', artist_name
+  song_count = 0
+  try:
+    # protecting against too many redirects
+    uri = artist_link
+    response = requests.get(uri)	# goto the artists page
+  except requests.exceptions.TooManyRedirects:
+    print "too many redirects. quitting."
+    return
+  artist_page_html  = response.text
+  artist_page_html_soup = BeautifulSoup(artist_page_html, "html.parser")
+
+  # on artist page, get Genre
+  artist_title = artist_page_html_soup.findAll("div", { "class" : "pagetitle" })  # get the title div which has the genres
+  artist_songs = artist_page_html_soup.findAll("table", { "class" : "tracklist" })	# get all songs
+  songs_seen = 1
+  # check if this div is not empty
+  if len(artist_title) != 0:
+    '''if this is the case, we will be skipping this set of lyrics since they are not tagged'''
+    artist_title_soup = BeautifulSoup(str(artist_title[0]), 'html.parser')   # soup banaao
+    # genre = artist_title_soup.a.text		# <- this is the required genre append to hash table
+    # genre = genre.encode('utf-8')
+    # Check if this genre is in the list, otherwise skip
+    song_count += 1
+    # print current_artist_url, genre
+    # Now finally, get the lyrics and put them into the DB
+    song_soup = soup = BeautifulSoup(str(artist_songs), 'html.parser')
+    for song in song_soup.findAll('a'):
+      if songs_seen <= num_songs_for_artist:
+        # deep-dive into each link one by one and retrieve the lyrics
+        song_url = song['href']
+        song_url = song_url.encode('utf-8')
+        song_name = song.text
+        song_name = song_name.encode('utf-8')
+        song_request = requests.get(song_url)
+        song_lyrics = BeautifulSoup(song_request.text, "html.parser")
+	if song_lyrics.img != None:
+	  img = song_lyrics.img.extract()
+	lyrics_div = song_lyrics.find("p", { "id" : "songLyricsDiv" })
+	if not lyrics_div == None:
+	  lyric = lyrics_div.get_text()
+	  lyric = lyric.encode('utf-8')
+	  # now we edit out crap from the lyrics
+	  lyric = re.sub(r"[^\s\w_]+", '', lyric.lower())
+	  # print "lyric = ", lyric
+	  if (len(lyric) >= MIN_LYRICS_CHARCOUNT) and (lyric[:25] != 'We do not have the lyrics'):
+	  	# print 'song inserted!'
+	  	'''INSERTING THE LYRICS INTO THE DB'''
+	  	db_cursor.execute("""insert into song (lyrics, genre, url, artist_name, song_name) values (%s, %s, %s, %s, %s)""", (lyric, genre, song_url, artist_name, song_name))
+	  	db.commit()
+  		songs_seen += 1
+  	  else:
+  	  	print "skipped one"
+  print "DONE!"
+
+def grab_lyrics(artist_list, genre):
+	for artist in artist_list:
+		artist_link = 'http://www.songlyrics.com/' + '-'.join(artist.split()) + '-lyrics/'
+		grab_lyrics_artist(artist_link, 220, artist, genre)
+
 if __name__ == "__main__":
 	# alphabets_list = string.lowercase
-	alphabets_list = ['t']
-	for alph in alphabets_list:
-		# TODO: spawn a new thread for each call to extract_artist
-		extract_artist(alph, artist_page = 19, genres_considered = ['Pop', 'Hip Hop/Rap', 'R&B;', 'Electronic', 'Country', 'Jazz', 'Blues', 'Christian', 'Folk'])
-
+	# alphabets_list = ['t']
+	# for alph in alphabets_list:
+	# TODO: spawn a new thread for each call to extract_artist
+	# extract_artist(alph,artist_page=2, genres_considered = ['Rock', 'Pop', 'Hip Hop/Rap', 'R&B;', 'Country', 'Jazz', 'Blues', 'Christian'])
+	artist_list = ['dolly parton', 'garth brooks', 'johnny cash', 'willie nelson', 'merle haggard', 'shania twain', 'kenny rogers', 'conway twitty', 'carrie underwood', 'faith hill']
+	# grab_lyrics_artist('http://www.songlyrics.com/michael-jackson-lyrics/', 200, 'Michael Jackson', 'Pop')
+	grab_lyrics(artist_list, 'Country')
