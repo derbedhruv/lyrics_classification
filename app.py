@@ -1,4 +1,5 @@
 # the flask app for the baseline for the cs221 mini project
+import os
 from flask import Flask, request, Response, jsonify
 
 import util
@@ -8,11 +9,19 @@ import rid
 
 import pickle
 
+import sys
+
+app_folder = os.path.dirname(os.path.realpath(__file__))
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-  return Response(open('index.html').read(), mimetype="text/html")
+  return Response(open(os.path.abspath(os.path.join(app_folder, '..', '/index.html'))).read(), mimetype="text/html")
+
+
+@app.route('/cs221_project')
+def cs221():
+  return Response(open(app_folder + '/index.html').read(), mimetype="text/html")
 
 @app.route('/process-lyrics', methods=['GET', 'POST'])
 def process_lyrics():
@@ -31,8 +40,8 @@ def process_lyrics():
 
 	# convert to vector
 	# load the topwords and topngrams
-	topwords = pickle.load(open('flaskapp-topwords.pklz', 'r'))
-	topngrams = pickle.load(open('flaskapp-topngrams.pklz', 'r'))
+	topwords = pickle.load(open(app_folder +'/flaskapp-topwords.pklz', 'r'))
+	topngrams = pickle.load(open(app_folder + '/flaskapp-topngrams.pklz', 'r'))
 
 	# scan through the string and find out which of the top words and n-grams are present
 	topwords_present = [w for w in lyrics.split() if w in topwords]
@@ -43,7 +52,7 @@ def process_lyrics():
 
 	# load the model and make prediction
 	# http://stackoverflow.com/questions/23000693/how-to-output-randomforest-classifier-from-python
-	RFC = joblib.load('rfc-cs221-poster.pklz')
+	RFC = joblib.load(app_folder + '/rfc-cs221-poster.pklz')
 	# prediction = RFC.predict_proba(song_vector.reshape(1, -1))[0].tolist()
 	prediction = RFC.predict_proba(song_vector)[0].tolist()
 
