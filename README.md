@@ -25,4 +25,4 @@ The latest results are as follows (Random Forest Classifier, trained on 46448 so
 
 
 ## Demo
-A live demo of the project (using Random Forest) is available [http://derbedhruv.webfactional.com/cs221_project](here).
+A live demo of the project (using Random Forest) is available [here](http://derbedhruv.webfactional.com/cs221_project).
