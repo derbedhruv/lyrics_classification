@@ -1,15 +1,15 @@
 # the flask app for the baseline for the cs221 mini project
-import os
+import os, util, sys, pickle, re
 from flask import Flask, request, Response, jsonify
 
+import rid
 import util
 from sklearn.externals import joblib	# better than pickle
-from sklearn.ensemble import RandomForestClassifier # use predict_proba to output the probabilities of each genre
-import rid
 
-import pickle
+import numpy
+from sklearn.manifold import TSNE
 
-import sys
+
 
 app_folder = os.path.dirname(os.path.realpath(__file__))
 app = Flask(__name__)
@@ -43,6 +43,40 @@ def process_lyrics():
 	topwords = pickle.load(open(app_folder +'/flaskapp-topwords.pklz', 'r'))
 	topngrams = pickle.load(open(app_folder + '/flaskapp-topngrams.pklz', 'r'))
 
+	# loading the GloVe dictionary
+	glove_dictionary = {}
+	f = open(app_folder + '/glove.custom.70percentLyricsCorpus.Dec10.txt')     # custom made GloVe representation capturing the semantics of lyrics corpus
+	for line in f:
+	    values = line.split()
+	    word = values[0]
+	    coefs = numpy.asarray(values[1:], dtype='float32')
+	    glove_dictionary[word] = coefs
+
+	f.close()
+
+	# then will find which words are being used in this case
+	wordpoints = []		# will be converted in a JSON containing an array of (word, x, y, z)
+	wordarray = []
+	words = [re.sub(r"[^\s\w_]+", '', w.lower()) for w in lyrics.split()]
+	for word in words:
+		wordarray.append(list(glove_dictionary[word]))
+
+	# lower dimensions and fit..
+	if len(wordarray) > 1:
+		# can only run TSNE if there's more than one word!
+		tsne = TSNE(n_components=3, random_state=0)
+		P = tsne.fit_transform(wordarray)
+
+		for i, word in enumerate(words):
+			tempwpoint = {}
+			tempwpoint['word'] = word
+			tempwpoint['x'] = P[i][0]
+			tempwpoint['y'] = P[i][1]
+			tempwpoint['z'] = P[i][2]
+
+			# finally append it to the main dict
+			wordpoints.append(tempwpoint)
+
 	# scan through the string and find out which of the top words and n-grams are present
 	topwords_present = [w for w in lyrics.split() if w in topwords]
 	topngrams_present = [ng for ng in util.ngram(lyrics, n=3) if ng in topngrams]
@@ -62,6 +96,7 @@ def process_lyrics():
 	processed['topwords'] = topwords_present
 	processed['topngrams'] = topngrams_present
 	processed['prediction'] = RFC.predict(song_vector).tolist()[0]
+	processed['wordpoints'] = wordpoints
 
 	# return json version of dictionary to requester
 	# http://stackoverflow.com/questions/13081532/how-to-return-json-using-flask-web-framework

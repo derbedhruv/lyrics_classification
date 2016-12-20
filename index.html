@@ -81,6 +81,7 @@ function processLyrics() {
 	var user_lyrics = $("#lyrix").val();
 	// console.log(user_lyrics);
 	// https://api.jquery.com/jquery.post/
+	$(".btn").text("Processing...").css("color", "red");
 	$.post( "/process-lyrics", { lyrics: user_lyrics } , function(data) {
 		// generate a table showing probabilities of different genres, RID and others
 		// console.log(data.prediction);
@@ -88,6 +89,8 @@ function processLyrics() {
 		var topngrams = data.topngrams
 		var topwords = data.topwords
 		var probabilities = data.probabilities
+
+		console.log(data.wordpoints);
 
 		// console.log(probabilities)
 		$('#prediction').append(genre[predicted_genre]())
@@ -99,6 +102,9 @@ function processLyrics() {
 		}
 		new_row += '</tr>';
 		$('#gprobs').append(new_row)
+
+		// finally, hide the loading part..
+		$(".btn").text("Process Another!").css("color", "rgb(51, 51, 51)")
 	});
 }
 
