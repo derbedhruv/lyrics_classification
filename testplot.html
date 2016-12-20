@@ -108,14 +108,8 @@
 
     $( document ).ready(function() {
         console.log( "ready and plotting.." );
-        plotEmAll(wordPoints);
+        scatter(wordPoints);
     });
-    
-
-    function plotEmAll(data) {
-        // plot the points in the JSON
-        scatter(data);
-    }
 
     var renderer = new THREE.WebGLRenderer({
         antialias: true
