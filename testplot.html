@@ -59,7 +59,7 @@
     ];
 
     function createTextCanvas(text, color, font, size) {
-        size = size || 16;
+        size = size || 12;
         var canvas = document.createElement('canvas');
         var ctx = canvas.getContext('2d');
         var fontStr = (size + 'px ') + (font || 'Arial');
@@ -153,6 +153,7 @@
             });
 
         var vpts = {
+            // these are the extreme points and centers which help construct the outer square wireframe
             xMax: xExent[1],
             xCen: (xExent[1] + xExent[0]) / 2,
             xMin: xExent[0],
@@ -178,6 +179,7 @@
 
         var lineGeo = new THREE.Geometry();
         lineGeo.vertices.push(
+            // creates the wireframes for the outer box
             v(xScale(vpts.xMin), yScale(vpts.yCen), zScale(vpts.zCen)), v(xScale(vpts.xMax), yScale(vpts.yCen), zScale(vpts.zCen)),
             v(xScale(vpts.xCen), yScale(vpts.yMin), zScale(vpts.zCen)), v(xScale(vpts.xCen), yScale(vpts.yMax), zScale(vpts.zCen)),
             v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMax)), v(xScale(vpts.xCen), yScale(vpts.yCen), zScale(vpts.zMin)),
@@ -222,6 +224,9 @@
         line.type = THREE.Lines;
         scatterPlot.add(line);
 
+        // the next part adds the axes legends and extents
+        // commented out as they add unnecessary noise in this case, but might come in handy at some point in the future
+        /*
         var titleX = createText2D('-X');
         titleX.position.x = xScale(vpts.xMin) - 12,
         titleX.position.y = 5;
@@ -266,6 +271,8 @@
         titleZ.position.z = zScale(vpts.zMax) + 2;
         scatterPlot.add(titleZ);
 
+        */
+
         var mat = new THREE.ParticleBasicMaterial({
             vertexColors: true,
             size: 10
@@ -283,6 +290,12 @@
                 hexToRgb(colour(i)).r / 255, hexToRgb(colour(i)).g / 255, hexToRgb(colour(i)).b / 255
             ));
 
+            // put the text label
+            var wordTitle = createText2D(data[i].word);
+            wordTitle.position.x = x;
+            wordTitle.position.y = y;
+            wordTitle.position.z = z;
+            scatterPlot.add(wordTitle);
         }
         var points = new THREE.ParticleSystem(pointGeo, mat);
         scatterPlot.add(points);
