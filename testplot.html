@@ -22,9 +22,6 @@
 
 </head>
 <div id="wrapper">
-    <p>
-        <input id="uploader" name="uploader" type="file" />
-    </p>
     <div id="container"></div>
 </div>
 
@@ -108,55 +105,6 @@
         var s = Math.pow(x, 2);
         return s;
     }
-
-    function getPts(x) {
-        //console.log(x)
-        var unfiltered = [],
-            lowPass = [],
-            highPass = [];
-
-        x.forEach(function(d, i) {
-
-            var line = d.split(",");
-
-            points[i] = {
-                x: +line[0],
-                y: +line[1],
-                z: +line[2]
-            };
-        })
-        var xyzData = {
-            unfiltered: unfiltered
-        }
-        return xyzData;
-    }
-
-    var uploader = document.getElementById("uploader");
-    var reader = new FileReader();
-    var data;
-
-    reader.onload = function(e) {
-        var contents = e.target.result;
-        var rawData = contents.split(/\n/);
-        var tempData = rawData.slice(2, rawData.length);
-        data = getPts(tempData);
-        // console.log(data)
-        scatter(data);
-
-        // remove button after loading file
-        uploader.parentNode.removeChild(uploader);
-    };
-
-    // commenting out the listener for change in the inputbox for files, will hardcode the test file
-    uploader.addEventListener("change", handleFiles, false);
-    // handleFiles();
-
-    function handleFiles() {
-        var file = this.files[0];        // get the filename from the textbox with id 'uploader'
-        console.log(file);
-        // var file = '';
-        reader.readAsText(file);
-    };
 
     $( document ).ready(function() {
         console.log( "ready and plotting.." );
