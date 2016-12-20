@@ -25,4 +25,4 @@ The latest results are as follows (Random Forest Classifier, trained on 46448 so
 
 
 ## Demo
-A live demo of the project (using Random Forest) is available [here](http://derbedhruv.webfactional.com/cs221_project).
+A live demo of the project (using Random Forest) is available [here](http://derbedhruv.webfactional.com/cs221_project). Also, a 3D plot of the GloVe word embeddings is shown here - trained on a 10,000-song corpus and reduced to 3 dimensions. The 3D plotting was done using three.js and was based on amazing work by [Phil Pedruco](http://bl.ocks.org/phil-pedruco/9913243#index.html).
