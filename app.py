@@ -56,10 +56,15 @@ def process_lyrics():
 
 	# then will find which words are being used in this case
 	wordpoints = []		# will be converted in a JSON containing an array of (word, x, y, z)
+	foundwords = []		# list of song words which were actually found in the dictionary
 	wordarray = []
 	words = [re.sub(r"[^\s\w_]+", '', w.lower()) for w in lyrics.split()]
 	for word in words:
-		wordarray.append(list(glove_dictionary[word]))
+		try:
+			wordarray.append(list(glove_dictionary[word]))
+			foundwords.append(word)
+		except KeyError:
+			continue
 
 	# lower dimensions and fit..
 	if len(wordarray) > 1:
@@ -67,7 +72,7 @@ def process_lyrics():
 		tsne = TSNE(n_components=3, random_state=0)
 		P = tsne.fit_transform(wordarray)
 
-		for i, word in enumerate(words):
+		for i, word in enumerate(foundwords):
 			tempwpoint = {}
 			tempwpoint['word'] = word
 			tempwpoint['x'] = P[i][0]
