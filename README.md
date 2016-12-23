@@ -25,6 +25,7 @@ The results of a random forest trained on 46448 songs and tested on 11613 songs 
 | Christian   	| 0.64 				| 0.55 				|
 
 The confusion matrix is as follows (Rows are the ground truth and Columns are the predicted values):
+
 |             | Rock | Pop | Hip Hop/Rap | R&B | Country | Jazz | Blues | Christian | 
 |-------------|------|-----|-------------|-----|---------|------|-------|-----------| 
 | Rock        | 159  | 12  | 4           | 34  | 48      | 23   | 125   | 13        | 
