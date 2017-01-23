@@ -30,8 +30,9 @@
 		</div>
 		<button type="submit" class="btn btn-default">Process!</button>
 	  </form>
-	  <div id="prediction">
+	  <div>
 	  	Predicted genre for this song:
+		<span id="prediction"></span>
 	  </div>
 	  <div style="padding:10px">
 	  	Probabilities of each genre:
@@ -44,7 +45,6 @@
 			  	<th>Country</th>
 			  	<th>Jazz</th>
 			  	<th>Blues</th>
-			  	<th>Christian</th>
 			 </tr>
 		  </table>
 		</div>
@@ -87,7 +87,7 @@ var genre = {
     return "Blues";
   },
   "7": function() {
-    return "Christian";
+    return "Pop";
   },
 };
 
@@ -104,18 +104,26 @@ function processLyrics() {
 		var topwords = data.topwords
 		var probabilities = data.probabilities
 
+		// HACK: classify 'christian' as 'Pop' since there are a lot of misclassifications happening
+		probabilities[1] += probabilities[7];
+
 		// console.log(data.wordpoints);
 		scatter(data.wordpoints);
 
 		// console.log(probabilities)
-		$('#prediction').append(genre[predicted_genre]())
+		$('#prediction').html(genre[predicted_genre]())
 
 		// write to the table
 		var new_row = '<tr>';
-		for (i=0; i<8; i++) {
+		for (i=0; i<7; i++) {
 			new_row += '<td>' + probabilities[i] + '</td>'
 		}
 		new_row += '</tr>';
+
+		// remove previous row if it exists in the table, and append new
+		if ($('#gprobs').children().children().length > 1) {
+		  $('#gprobs').children().children()[1].remove();
+		}
 		$('#gprobs').append(new_row)
 
 		// finally, hide the loading part..
@@ -124,20 +132,20 @@ function processLyrics() {
 
 	/* ALL THE 3D.JS STUFF FOR VISUALIZING THE WORDS! */
 	function createTextCanvas(text, color, font, size) {
-        size = size || 12;
-        var canvas = document.createElement('canvas');
-        var ctx = canvas.getContext('2d');
-        var fontStr = (size + 'px ') + (font || 'Arial');
-        ctx.font = fontStr;
-        var w = ctx.measureText(text).width;
-        var h = Math.ceil(size);
-        canvas.width = w;
-        canvas.height = h;
-        ctx.font = fontStr;
-        ctx.fillStyle = color || 'black';
-        ctx.fillText(text, 0, Math.ceil(size * 0.8));
-        return canvas;
-    }
+	  size = size || 12;
+	  var canvas = document.createElement('canvas');
+	  var ctx = canvas.getContext('2d');
+	  var fontStr = (size + 'px ') + (font || 'Arial');
+	  ctx.font = fontStr;
+	  var w = ctx.measureText(text).width;
+	  var h = Math.ceil(size);
+	  canvas.width = w;
+	  canvas.height = h;
+	  ctx.font = fontStr;
+	  ctx.fillStyle = color || 'black';
+	  ctx.fillText(text, 0, Math.ceil(size * 0.8));
+	  return canvas;
+      }
 
     function createText2D(text, color, font, size, segW, segH) {
         var canvas = createTextCanvas(text, color, font, size);
