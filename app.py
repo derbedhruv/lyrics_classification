@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-  return Response(open(os.path.abspath(os.path.join(app_folder, '..', '/index.html'))).read(), mimetype="text/html")
+  return Response(open(os.path.abspath(os.path.join(app_folder, '..', 'index.html'))).read(), mimetype="text/html")
 
 
 @app.route('/cs221_project')
