@@ -86,9 +86,6 @@ var genre = {
   "6": function() {
     return "Blues";
   },
-  "7": function() {
-    return "Pop";
-  },
 };
 
 function processLyrics() {
@@ -103,9 +100,6 @@ function processLyrics() {
 		var topngrams = data.topngrams
 		var topwords = data.topwords
 		var probabilities = data.probabilities
-
-		// HACK: classify 'christian' as 'Pop' since there are a lot of misclassifications happening
-		probabilities[1] += probabilities[7];
 
 		// console.log(data.wordpoints);
 		scatter(data.wordpoints);

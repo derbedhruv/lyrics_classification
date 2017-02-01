@@ -93,14 +93,19 @@ def process_lyrics():
 	# http://stackoverflow.com/questions/23000693/how-to-output-randomforest-classifier-from-python
 	RFC = joblib.load(app_folder + '/rfc-cs221-poster.pklz')
 	# prediction = RFC.predict_proba(song_vector.reshape(1, -1))[0].tolist()
+
+	# HACK: Remove the christian genre (7) and add it to pop, since the two frequently are mis-classified as each other
 	prediction = RFC.predict_proba(song_vector)[0].tolist()
+	prediction[1] += prediction[7]
+	prediction = prediction[:7]
+	processed['prediction'] = [x for x in range(len(prediction)) if prediction[x] == max(prediction)]
 
 	# append to the dictionary
 	processed['probabilities'] = prediction
 	processed['stats'] = song_vector[:5]	# send the first 5 of the features - these are the sentence stats
 	processed['topwords'] = topwords_present
 	processed['topngrams'] = topngrams_present
-	processed['prediction'] = RFC.predict(song_vector).tolist()[0]
+	# processed['prediction'] = RFC.predict(song_vector).tolist()[0]
 	processed['wordpoints'] = wordpoints
 
 	# return json version of dictionary to requester
